@@ -1,4 +1,5 @@
 {
-	"*.{js,jsx,ts,tsx,mjs,cjs}": ["pnpm exec biome check --write --unsafe || true"],
-	"*.{json,md,mdx,css,html,yml,yaml,scss}": ["pnpm exec biome check --write --unsafe || true"]
+	"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+		"pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+	]
 }

@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { NextRequest } from "next/server";
-import type { Injection } from "@/types/injection";
+import { sanitizeNotes, sanitizeUserName, validateInjectionData } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
 	const { env } = await getCloudflareContext();
@@ -13,11 +13,17 @@ export async function GET(request: NextRequest) {
 		const params: string[] = [];
 
 		if (date) {
+			// Validate date format
+			const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+			if (!dateRegex.test(date)) {
+				return Response.json({ error: "Invalid date format" }, { status: 400 });
+			}
+
 			query += " WHERE DATE(injection_time) = DATE(?)";
 			params.push(date);
 		}
 
-		query += " ORDER BY injection_time DESC";
+		query += " ORDER BY injection_time DESC LIMIT 100"; // Add limit for performance
 
 		const result = await env.DB.prepare(query)
 			.bind(...params)
@@ -34,16 +40,29 @@ export async function POST(request: NextRequest) {
 	const { env } = await getCloudflareContext();
 
 	try {
-		const injection: Injection = await request.json();
+		const data = await request.json();
+
+		// Validate injection data
+		if (!validateInjectionData(data)) {
+			return Response.json({ error: "Invalid injection data" }, { status: 400 });
+		}
+
+		// Sanitize input
+		const sanitizedData = {
+			user_name: sanitizeUserName(data.user_name),
+			injection_time: data.injection_time,
+			injection_type: data.injection_type,
+			notes: sanitizeNotes(data.notes),
+		};
 
 		const result = await env.DB.prepare(
 			"INSERT INTO injections (user_name, injection_time, injection_type, notes) VALUES (?, ?, ?, ?)",
 		)
 			.bind(
-				injection.user_name,
-				injection.injection_time,
-				injection.injection_type,
-				injection.notes || null,
+				sanitizedData.user_name,
+				sanitizedData.injection_time,
+				sanitizedData.injection_type,
+				sanitizedData.notes,
 			)
 			.run();
 

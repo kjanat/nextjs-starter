@@ -2,20 +2,32 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { INJECTION_TYPES } from "@/lib/constants";
+import { formatDate, formatTime, getToday } from "@/lib/utils";
 import type { Injection } from "@/types/injection";
 
 export default function HistoryPage() {
 	const [injections, setInjections] = useState<Injection[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+	const [error, setError] = useState<string | null>(null);
+	const [selectedDate, setSelectedDate] = useState(getToday());
 
 	const fetchInjections = useCallback(async () => {
+		setLoading(true);
+		setError(null);
 		try {
 			const response = await fetch(`/api/injections?date=${selectedDate}`);
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch: ${response.statusText}`);
+			}
+
 			const data = (await response.json()) as { injections: Injection[] };
 			setInjections(data.injections || []);
-		} catch (error) {
-			console.error("Failed to fetch injections:", error);
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : "Failed to fetch injections";
+			console.error("Failed to fetch injections:", err);
+			setError(errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -24,21 +36,6 @@ export default function HistoryPage() {
 	useEffect(() => {
 		fetchInjections();
 	}, [fetchInjections]);
-
-	const formatTime = (dateString: string) => {
-		return new Date(dateString).toLocaleTimeString("en-US", {
-			hour: "numeric",
-			minute: "2-digit",
-		});
-	};
-
-	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString("en-US", {
-			weekday: "short",
-			month: "short",
-			day: "numeric",
-		});
-	};
 
 	return (
 		<div className="min-h-screen p-4 max-w-md mx-auto">
@@ -65,40 +62,43 @@ export default function HistoryPage() {
 				<div className="text-center py-8">
 					<div className="text-xl">Loading...</div>
 				</div>
+			) : error ? (
+				<div className="text-center py-8 text-red-500">Error: {error}</div>
 			) : injections.length === 0 ? (
 				<div className="text-center py-8 text-gray-500">
 					No injections recorded for {formatDate(selectedDate)}
 				</div>
 			) : (
 				<div className="space-y-3">
-					{injections.map((injection) => (
-						<div
-							key={injection.id}
-							className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4"
-						>
-							<div className="flex items-center justify-between">
-								<div>
-									<div className="flex items-center gap-2">
-										<span className="text-lg">
-											{injection.injection_type === "morning" ? "🌅" : "🌙"}
-										</span>
-										<span className="font-semibold capitalize">
-											{injection.injection_type} Dose
-										</span>
-									</div>
-									<div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-										By: {injection.user_name} at {formatTime(injection.injection_time)}
-									</div>
-									{injection.notes && (
-										<div className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-											Note: {injection.notes}
+					{injections.map((injection) => {
+						const isMorning = injection.injection_type === INJECTION_TYPES.MORNING;
+						return (
+							<div
+								key={injection.id}
+								className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4"
+							>
+								<div className="flex items-center justify-between">
+									<div>
+										<div className="flex items-center gap-2">
+											<span className="text-lg">{isMorning ? "🌅" : "🌙"}</span>
+											<span className="font-semibold capitalize">
+												{injection.injection_type} Dose
+											</span>
 										</div>
-									)}
+										<div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+											By: {injection.user_name} at {formatTime(injection.injection_time)}
+										</div>
+										{injection.notes && (
+											<div className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+												Note: {injection.notes}
+											</div>
+										)}
+									</div>
+									<div className="text-green-500">✅</div>
 								</div>
-								<div className="text-green-500">✅</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 				</div>
 			)}
 		</div>

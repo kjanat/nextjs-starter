@@ -1,61 +1,78 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { COMPLIANCE_DAYS, DOSES_PER_DAY, INJECTION_TYPES } from "@/lib/constants";
+import { getLastNDays } from "@/lib/utils";
+
+interface InjectionCount {
+	injection_type: string;
+	count: number;
+}
+
+interface UserCount {
+	user_name: string;
+	count: number;
+}
+
+interface DayInjections {
+	date: string;
+	morning_count: number;
+	evening_count: number;
+}
 
 export async function GET() {
 	const { env } = await getCloudflareContext();
 
 	try {
-		const now = new Date();
+		// Parallel queries for better performance
+		const [totalResult, userStatsResult, typeStatsResult, weeklyDataResult] = await Promise.all([
+			// Get total injections
+			env.DB.prepare("SELECT COUNT(*) as count FROM injections").first(),
 
-		// Get total injections
-		const totalResult = await env.DB.prepare("SELECT COUNT(*) as count FROM injections").first();
+			// Get user statistics
+			env.DB.prepare(
+				`SELECT user_name, COUNT(*) as count 
+				 FROM injections 
+				 GROUP BY user_name
+				 ORDER BY count DESC`,
+			).all(),
 
-		// Get user statistics
-		const userStatsResult = await env.DB.prepare(
-			`SELECT user_name, COUNT(*) as count 
-       FROM injections 
-       GROUP BY user_name`,
-		).all();
+			// Get morning/evening distribution
+			env.DB.prepare(
+				`SELECT injection_type, COUNT(*) as count 
+				 FROM injections 
+				 GROUP BY injection_type`,
+			).all(),
 
-		// Get morning/evening distribution
-		const typeStatsResult = await env.DB.prepare(
-			`SELECT injection_type, COUNT(*) as count 
-       FROM injections 
-       GROUP BY injection_type`,
-		).all();
+			// Get last 7 days data in one query
+			env.DB.prepare(
+				`SELECT 
+					DATE(injection_time) as date,
+					SUM(CASE WHEN injection_type = '${INJECTION_TYPES.MORNING}' THEN 1 ELSE 0 END) as morning_count,
+					SUM(CASE WHEN injection_type = '${INJECTION_TYPES.EVENING}' THEN 1 ELSE 0 END) as evening_count
+				 FROM injections 
+				 WHERE DATE(injection_time) >= DATE('now', '-${COMPLIANCE_DAYS} days')
+				 GROUP BY DATE(injection_time)`,
+			).all(),
+		]);
 
-		// Calculate missed doses (last 7 days)
-		const lastWeekDates = [];
-		for (let i = 0; i < 7; i++) {
-			const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-			lastWeekDates.push(date.toISOString().split("T")[0]);
-		}
+		// Process weekly data for compliance calculation
+		const weeklyData = (weeklyDataResult.results || []) as unknown as DayInjections[];
+		const lastWeekDates = getLastNDays(COMPLIANCE_DAYS);
 
 		let missedDoses = 0;
-		for (const date of lastWeekDates) {
-			const dayResult = await env.DB.prepare(
-				`SELECT injection_type 
-         FROM injections 
-         WHERE DATE(injection_time) = DATE(?)`,
-			)
-				.bind(date)
-				.all();
+		lastWeekDates.forEach((date) => {
+			const dayData = weeklyData.find((d) => d.date === date);
+			if (!dayData || dayData.morning_count === 0) missedDoses++;
+			if (!dayData || dayData.evening_count === 0) missedDoses++;
+		});
 
-			const injections = dayResult.results as Array<{ injection_type: string }>;
-			const hasMorning = injections.some((i) => i.injection_type === "morning");
-			const hasEvening = injections.some((i) => i.injection_type === "evening");
-
-			if (!hasMorning) missedDoses++;
-			if (!hasEvening) missedDoses++;
-		}
-
-		// Calculate compliance rate (last 7 days)
-		const totalExpectedDoses = 14; // 2 per day * 7 days
+		// Calculate compliance rate
+		const totalExpectedDoses = COMPLIANCE_DAYS * DOSES_PER_DAY;
 		const actualDoses = totalExpectedDoses - missedDoses;
 		const complianceRate = (actualDoses / totalExpectedDoses) * 100;
 
 		// Process results
 		const userStats: Record<string, number> = {};
-		(userStatsResult.results as Array<{ user_name: string; count: number }>).forEach((row) => {
+		((userStatsResult.results || []) as unknown as UserCount[]).forEach((row) => {
 			userStats[row.user_name] = row.count;
 		});
 
@@ -63,9 +80,12 @@ export async function GET() {
 			morning: 0,
 			evening: 0,
 		};
-		(typeStatsResult.results as Array<{ injection_type: string; count: number }>).forEach((row) => {
-			if (row.injection_type === "morning") typeStats.morning = row.count;
-			if (row.injection_type === "evening") typeStats.evening = row.count;
+		((typeStatsResult.results || []) as unknown as InjectionCount[]).forEach((row) => {
+			if (row.injection_type === INJECTION_TYPES.MORNING) {
+				typeStats.morning = row.count;
+			} else if (row.injection_type === INJECTION_TYPES.EVENING) {
+				typeStats.evening = row.count;
+			}
 		});
 
 		return Response.json({

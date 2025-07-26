@@ -13,7 +13,7 @@ This template uses [OpenNext](https://opennext.js.org/) via the [OpenNext Cloudf
 Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
 
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/next-starter-template
+pnpm create cloudflare@latest -- --template=cloudflare/templates/next-starter-template
 ```
 
 A live public deployment of this template is available at [https://next-starter-template.templates.workers.dev](https://next-starter-template.templates.workers.dev)
@@ -35,7 +35,7 @@ bun install
 Then run the development server (using the package manager of your choice):
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -46,11 +46,11 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 
 ## Deploying To Production
 
-| Command                           | Action                                       |
-| :-------------------------------- | :------------------------------------------- |
-| `npm run build`                   | Build your production site                   |
-| `npm run preview`                 | Preview your build locally, before deploying |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare    |
+| Command                            | Action                                       |
+| :--------------------------------- | :------------------------------------------- |
+| `pnpm run build`                   | Build your production site                   |
+| `pnpm run preview`                 | Preview your build locally, before deploying |
+| `pnpm run build && npm run deploy` | Deploy your production site to Cloudflare    |
 
 ## Learn More
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { StatCard } from "@/components/StatCard";
 
 interface Stats {
 	totalInjections: number;
@@ -15,22 +16,38 @@ interface Stats {
 export default function StatsPage() {
 	const [stats, setStats] = useState<Stats | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		fetchStats();
-	}, []);
+	const sortedUserStats = useMemo(() => {
+		if (!stats) return [];
+		return Object.entries(stats.userStats).sort(([, a], [, b]) => b - a);
+	}, [stats]);
 
-	const fetchStats = async () => {
+	const topContributor = sortedUserStats[0] || null;
+
+	const fetchStats = useCallback(async () => {
 		try {
+			setError(null);
 			const response = await fetch("/api/injections/stats");
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch: ${response.statusText}`);
+			}
+
 			const data = (await response.json()) as Stats;
 			setStats(data);
-		} catch (error) {
-			console.error("Failed to fetch statistics:", error);
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : "Failed to fetch statistics";
+			console.error("Failed to fetch statistics:", err);
+			setError(errorMessage);
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		fetchStats();
+	}, [fetchStats]);
 
 	if (loading) {
 		return (
@@ -43,18 +60,10 @@ export default function StatsPage() {
 	if (!stats) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-xl text-red-500">Failed to load statistics</div>
+				<div className="text-xl text-red-500">{error || "Failed to load statistics"}</div>
 			</div>
 		);
 	}
-
-	const getTopContributor = () => {
-		const users = Object.entries(stats.userStats);
-		if (users.length === 0) return null;
-		return users.reduce((a, b) => (a[1] > b[1] ? a : b));
-	};
-
-	const topContributor = getTopContributor();
 
 	return (
 		<div className="min-h-screen p-4 max-w-md mx-auto">
@@ -68,37 +77,27 @@ export default function StatsPage() {
 
 			{/* Stats Grid */}
 			<div className="grid grid-cols-2 gap-4 mb-8">
-				{/* Total Injections */}
-				<div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
-					<div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-						{stats.totalInjections}
-					</div>
-					<div className="text-sm text-gray-600 dark:text-gray-400">Total Injections</div>
-				</div>
-
-				{/* Compliance Rate */}
-				<div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
-					<div className="text-3xl font-bold text-green-600 dark:text-green-400">
-						{stats.lastWeekCompliance}%
-					</div>
-					<div className="text-sm text-gray-600 dark:text-gray-400">7-Day Compliance</div>
-				</div>
-
-				{/* Morning Doses */}
-				<div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl">
-					<div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-						{stats.morningInjections}
-					</div>
-					<div className="text-sm text-gray-600 dark:text-gray-400">Morning Doses</div>
-				</div>
-
-				{/* Evening Doses */}
-				<div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl">
-					<div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-						{stats.eveningInjections}
-					</div>
-					<div className="text-sm text-gray-600 dark:text-gray-400">Evening Doses</div>
-				</div>
+				<StatCard
+					value={stats.totalInjections}
+					label="Total Injections"
+					colorClass="bg-blue-50 dark:bg-blue-900/20"
+				/>
+				<StatCard
+					value={stats.lastWeekCompliance}
+					label="7-Day Compliance"
+					colorClass="bg-green-50 dark:bg-green-900/20"
+					suffix="%"
+				/>
+				<StatCard
+					value={stats.morningInjections}
+					label="Morning Doses"
+					colorClass="bg-orange-50 dark:bg-orange-900/20"
+				/>
+				<StatCard
+					value={stats.eveningInjections}
+					label="Evening Doses"
+					colorClass="bg-purple-50 dark:bg-purple-900/20"
+				/>
 			</div>
 
 			{/* Missed Doses Alert */}
@@ -119,10 +118,11 @@ export default function StatsPage() {
 			{/* User Contributions */}
 			<div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
 				<h2 className="text-xl font-semibold mb-4">User Contributions</h2>
-				<div className="space-y-3">
-					{Object.entries(stats.userStats)
-						.sort(([, a], [, b]) => b - a)
-						.map(([name, count]) => {
+				{sortedUserStats.length === 0 ? (
+					<p className="text-gray-500">No contributions yet</p>
+				) : (
+					<div className="space-y-3">
+						{sortedUserStats.map(([name, count]) => {
 							const percentage = Math.round((count / stats.totalInjections) * 100);
 							const isTop = topContributor && topContributor[0] === name;
 
@@ -138,7 +138,7 @@ export default function StatsPage() {
 										</div>
 										<div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
 											<div
-												className="bg-blue-500 h-2 rounded-full"
+												className="bg-blue-500 h-2 rounded-full transition-all duration-300"
 												style={{ width: `${percentage}%` }}
 											/>
 										</div>
@@ -146,7 +146,8 @@ export default function StatsPage() {
 								</div>
 							);
 						})}
-				</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
