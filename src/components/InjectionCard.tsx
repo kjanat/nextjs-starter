@@ -1,4 +1,5 @@
 import { INJECTION_TARGETS, INJECTION_TYPES } from "@/lib/constants";
+import { buttonStyles, getInjectionCardClasses } from "@/lib/styles";
 import { formatTime } from "@/lib/utils";
 import type { Injection } from "@/types/injection";
 
@@ -22,14 +23,8 @@ export function InjectionCard({
 	const title = isMorning ? "Morning Dose" : "Evening Dose";
 	const target = isMorning ? INJECTION_TARGETS.MORNING : INJECTION_TARGETS.EVENING;
 
-	const cardClasses = `p-6 rounded-xl border-2 ${
-		isCompleted
-			? "bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-600"
-			: "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600"
-	}`;
-
 	return (
-		<div className={cardClasses}>
+		<div className={getInjectionCardClasses(isCompleted)}>
 			<div className="flex items-center justify-between mb-3">
 				<h2 className="text-xl font-semibold">{title}</h2>
 				<span className="text-2xl">{emoji}</span>
@@ -47,7 +42,7 @@ export function InjectionCard({
 					type="button"
 					onClick={onLogInjection}
 					disabled={isLogging}
-					className="w-full py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+					className={`w-full py-3 ${buttonStyles.danger}`}
 				>
 					{isLogging ? "Logging..." : `Give ${title}`}
 				</button>

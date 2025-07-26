@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { ErrorMessage } from "@/components/ErrorMessage";
 import { InjectionCard } from "@/components/InjectionCard";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { PageLayout } from "@/components/PageLayout";
 import { useTodayStatus } from "@/hooks/useTodayStatus";
 import { INJECTION_TYPES } from "@/lib/constants";
+import { alertStyles, buttonStyles, inputStyles } from "@/lib/styles";
 import { formatFullDate } from "@/lib/utils";
 
 export default function Home() {
@@ -48,44 +52,30 @@ export default function Home() {
 	);
 
 	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-2xl">Loading...</div>
-			</div>
-		);
+		return <LoadingSpinner message="Loading today's status..." />;
 	}
 
 	if (error) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-xl text-red-500">Error: {error}</div>
-			</div>
-		);
+		return <ErrorMessage error={error} onRetry={refetch} />;
 	}
 
 	return (
-		<div className="min-h-screen p-4 max-w-md mx-auto">
-			{/* Header */}
-			<div className="text-center mb-8 pt-8">
-				<h1 className="text-3xl font-bold mb-2">🐕 Insulin Tracker</h1>
-				<p className="text-gray-600 dark:text-gray-400">{formatFullDate(new Date())}</p>
-			</div>
-
+		<PageLayout title="Insulin Tracker" icon="🐕" subtitle={formatFullDate(new Date())}>
 			{/* Name Input */}
 			{showNamePrompt && (
-				<div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 dark:border-yellow-600 rounded-lg p-4 mb-6">
+				<div className={`${alertStyles.warning} mb-6`}>
 					<p className="text-sm mb-2">Please enter your name first:</p>
 					<input
 						type="text"
 						value={userName}
 						onChange={(e) => setUserName(e.target.value)}
 						placeholder="Your name"
-						className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800"
+						className={inputStyles}
 					/>
 					<button
 						type="button"
 						onClick={() => setShowNamePrompt(false)}
-						className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
+						className={`mt-2 ${buttonStyles.primary}`}
 					>
 						Save
 					</button>
@@ -118,26 +108,20 @@ export default function Home() {
 						value={userName}
 						onChange={(e) => setUserName(e.target.value)}
 						placeholder="Enter your name"
-						className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800"
+						className={inputStyles}
 					/>
 				</div>
 			)}
 
 			{/* Navigation */}
 			<div className="flex gap-2">
-				<Link
-					href="/history"
-					className="flex-1 py-3 text-center bg-gray-200 dark:bg-gray-700 rounded-lg"
-				>
+				<Link href="/history" className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}>
 					History
 				</Link>
-				<Link
-					href="/stats"
-					className="flex-1 py-3 text-center bg-gray-200 dark:bg-gray-700 rounded-lg"
-				>
+				<Link href="/stats" className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}>
 					Statistics
 				</Link>
 			</div>
-		</div>
+		</PageLayout>
 	);
 }

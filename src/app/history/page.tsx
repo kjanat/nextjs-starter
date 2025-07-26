@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { PageLayout } from "@/components/PageLayout";
 import { INJECTION_TYPES } from "@/lib/constants";
+import { containerStyles, inputStyles } from "@/lib/styles";
 import { formatDate, formatTime, getToday } from "@/lib/utils";
+import type { InjectionsResponse } from "@/types/api";
 import type { Injection } from "@/types/injection";
 
 export default function HistoryPage() {
@@ -22,7 +26,7 @@ export default function HistoryPage() {
 				throw new Error(`Failed to fetch: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as { injections: Injection[] };
+			const data = (await response.json()) as InjectionsResponse;
 			setInjections(data.injections || []);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch injections";
@@ -37,34 +41,28 @@ export default function HistoryPage() {
 		fetchInjections();
 	}, [fetchInjections]);
 
-	return (
-		<div className="min-h-screen p-4 max-w-md mx-auto">
-			{/* Header */}
-			<div className="text-center mb-8 pt-8">
-				<h1 className="text-3xl font-bold mb-2">📅 History</h1>
-				<Link href="/" className="text-blue-500 hover:underline">
-					← Back to Dashboard
-				</Link>
-			</div>
+	if (loading) {
+		return <LoadingSpinner message="Loading injection history..." />;
+	}
 
+	if (error) {
+		return <ErrorMessage error={error} onRetry={fetchInjections} />;
+	}
+
+	return (
+		<PageLayout title="History" icon="📅" backTo={{ href: "/", label: "← Back to Dashboard" }}>
 			{/* Date Selector */}
 			<div className="mb-6">
 				<input
 					type="date"
 					value={selectedDate}
 					onChange={(e) => setSelectedDate(e.target.value)}
-					className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800"
+					className={inputStyles}
 				/>
 			</div>
 
 			{/* Injections List */}
-			{loading ? (
-				<div className="text-center py-8">
-					<div className="text-xl">Loading...</div>
-				</div>
-			) : error ? (
-				<div className="text-center py-8 text-red-500">Error: {error}</div>
-			) : injections.length === 0 ? (
+			{injections.length === 0 ? (
 				<div className="text-center py-8 text-gray-500">
 					No injections recorded for {formatDate(selectedDate)}
 				</div>
@@ -73,10 +71,7 @@ export default function HistoryPage() {
 					{injections.map((injection) => {
 						const isMorning = injection.injection_type === INJECTION_TYPES.MORNING;
 						return (
-							<div
-								key={injection.id}
-								className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-4"
-							>
+							<div key={injection.id} className={containerStyles.card}>
 								<div className="flex items-center justify-between">
 									<div>
 										<div className="flex items-center gap-2">
@@ -101,6 +96,6 @@ export default function HistoryPage() {
 					})}
 				</div>
 			)}
-		</div>
+		</PageLayout>
 	);
 }

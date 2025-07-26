@@ -1,18 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { REFRESH_INTERVAL } from "@/lib/constants";
-import type { Injection } from "@/types/injection";
-
-interface TodayStatus {
-	date: string;
-	morningDone: boolean;
-	eveningDone: boolean;
-	morningDetails: Injection | null;
-	eveningDetails: Injection | null;
-	allComplete: boolean;
-}
+import type { TodayStatusResponse } from "@/types/api";
 
 export function useTodayStatus() {
-	const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
+	const [todayStatus, setTodayStatus] = useState<TodayStatusResponse | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +16,7 @@ export function useTodayStatus() {
 				throw new Error(`Failed to fetch: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as TodayStatus;
+			const data = (await response.json()) as TodayStatusResponse;
 			setTodayStatus(data);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch today status";

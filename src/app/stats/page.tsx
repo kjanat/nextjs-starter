@@ -1,20 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { PageLayout } from "@/components/PageLayout";
 import { StatCard } from "@/components/StatCard";
-
-interface Stats {
-	totalInjections: number;
-	morningInjections: number;
-	eveningInjections: number;
-	missedDoses: number;
-	userStats: Record<string, number>;
-	lastWeekCompliance: number;
-}
+import { alertStyles, containerStyles } from "@/lib/styles";
+import type { StatsResponse } from "@/types/api";
 
 export default function StatsPage() {
-	const [stats, setStats] = useState<Stats | null>(null);
+	const [stats, setStats] = useState<StatsResponse | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +29,7 @@ export default function StatsPage() {
 				throw new Error(`Failed to fetch: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as Stats;
+			const data = (await response.json()) as StatsResponse;
 			setStats(data);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch statistics";
@@ -50,31 +45,15 @@ export default function StatsPage() {
 	}, [fetchStats]);
 
 	if (loading) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-2xl">Loading statistics...</div>
-			</div>
-		);
+		return <LoadingSpinner message="Loading statistics..." />;
 	}
 
-	if (!stats) {
-		return (
-			<div className="min-h-screen flex items-center justify-center">
-				<div className="text-xl text-red-500">{error || "Failed to load statistics"}</div>
-			</div>
-		);
+	if (!stats || error) {
+		return <ErrorMessage error={error || "Failed to load statistics"} onRetry={fetchStats} />;
 	}
 
 	return (
-		<div className="min-h-screen p-4 max-w-md mx-auto">
-			{/* Header */}
-			<div className="text-center mb-8 pt-8">
-				<h1 className="text-3xl font-bold mb-2">📊 Statistics</h1>
-				<Link href="/" className="text-blue-500 hover:underline">
-					← Back to Dashboard
-				</Link>
-			</div>
-
+		<PageLayout title="Statistics" icon="📊" backTo={{ href: "/", label: "← Back to Dashboard" }}>
 			{/* Stats Grid */}
 			<div className="grid grid-cols-2 gap-4 mb-8">
 				<StatCard
@@ -102,7 +81,7 @@ export default function StatsPage() {
 
 			{/* Missed Doses Alert */}
 			{stats.missedDoses > 0 && (
-				<div className="bg-red-50 dark:bg-red-900/20 border border-red-400 dark:border-red-600 rounded-xl p-4 mb-8">
+				<div className={`${alertStyles.error} mb-8`}>
 					<div className="flex items-center gap-2">
 						<span className="text-2xl">⚠️</span>
 						<div>
@@ -116,7 +95,7 @@ export default function StatsPage() {
 			)}
 
 			{/* User Contributions */}
-			<div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+			<div className={containerStyles.section}>
 				<h2 className="text-xl font-semibold mb-4">User Contributions</h2>
 				{sortedUserStats.length === 0 ? (
 					<p className="text-gray-500">No contributions yet</p>
@@ -149,6 +128,6 @@ export default function StatsPage() {
 					</div>
 				)}
 			</div>
-		</div>
+		</PageLayout>
 	);
 }
