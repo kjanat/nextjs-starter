@@ -1,62 +1,231 @@
-# Next.js Framework Starter
+# 🐕 Insulin Tracker
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/next-starter-template)
+A modern insulin injection tracking application built with Next.js 15 and deployed on Cloudflare Workers. Track daily insulin injections, view history, and analyze compliance statistics with multi-user support.
 
-<!-- dash-content-start -->
+Built using [OpenNext](https://opennext.js.org/) via the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare) for optimal edge performance.
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app). It's deployed on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+## ✨ Features
 
-This template uses [OpenNext](https://opennext.js.org/) via the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare), which works by taking the Next.js build output and transforming it, so that it can run in Cloudflare Workers.
+### Application Features
 
-<!-- dash-content-end -->
+- **📊 Daily Injection Tracking** - Track morning and evening insulin doses
+- **👥 Multi-User Support** - Simple name-based tracking for families
+- **📅 History View** - Browse injection history by date
+- **📈 Statistics Dashboard** - View compliance rates and user contributions
+- **🔄 Real-time Updates** - Check today's injection status instantly
+- **🏆 Gamification** - See top contributors and track streaks
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+### Technical Features
+
+- **Next.js 15** with App Router for modern React applications
+- **Cloudflare Workers** deployment for edge computing
+- **TypeScript** for type-safe development
+- **React 19** with Server Components
+- **Tailwind CSS 4** for utility-first styling
+- **pnpm** for fast, efficient package management
+- **ESLint** and **TypeScript** strict mode for code quality
+- **OpenNext Cloudflare Adapter** for seamless deployment
+
+## 🚀 Quick Start
 
 ```bash
-pnpm create cloudflare@latest -- --template=cloudflare/templates/next-starter-template
-```
-
-A live public deployment of this template is available at [https://next-starter-template.templates.workers.dev](https://next-starter-template.templates.workers.dev)
-
-## Getting Started
-
-First, run:
-
-```bash
-npm install
-# or
-yarn install
-# or
+# Install dependencies
 pnpm install
-# or
-bun install
-```
 
-Then run the development server (using the package manager of your choice):
-
-```bash
+# Start development server
 pnpm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Command               | Description                      |
+| :-------------------- | :------------------------------- |
+| `pnpm run dev`        | Start the development server     |
+| `pnpm run build`      | Build for production             |
+| `pnpm run preview`    | Preview production build locally |
+| `pnpm run deploy`     | Deploy to Cloudflare Workers     |
+| `pnpm run check`      | Run build and TypeScript checks  |
+| `pnpm run lint`       | Run ESLint                       |
+| `pnpm run cf-typegen` | Generate Cloudflare types        |
 
-## Deploying To Production
+## 🏗️ Project Structure
 
-| Command                            | Action                                       |
-| :--------------------------------- | :------------------------------------------- |
-| `pnpm run build`                   | Build your production site                   |
-| `pnpm run preview`                 | Preview your build locally, before deploying |
-| `pnpm run build && npm run deploy` | Deploy your production site to Cloudflare    |
+```
+.
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/               # API endpoints
+│   │   │   └── injections/    # Injection tracking endpoints
+│   │   │       ├── route.ts   # CRUD operations
+│   │   │       ├── stats/     # Statistics endpoint
+│   │   │       └── today/     # Today's status endpoint
+│   │   ├── history/           # History page
+│   │   ├── stats/             # Statistics page
+│   │   ├── layout.tsx         # Root layout
+│   │   ├── page.tsx           # Main dashboard
+│   │   └── globals.css        # Global styles
+│   ├── components/            # React components
+│   │   ├── InjectionCard.tsx  # Injection status cards
+│   │   └── StatCard.tsx       # Statistics cards
+│   ├── hooks/                 # Custom React hooks
+│   │   └── useTodayStatus.ts  # Today's status hook
+│   ├── lib/                   # Utilities and helpers
+│   │   ├── constants.ts       # App constants
+│   │   ├── utils.ts          # Date/time utilities
+│   │   └── validation.ts      # Input validation
+│   └── types/                 # TypeScript types
+│       └── injection.ts       # Domain types
+├── public/                    # Static assets
+├── open-next.config.ts        # OpenNext configuration
+├── next.config.ts             # Next.js configuration
+├── tsconfig.json              # TypeScript configuration
+├── tailwind.config.ts         # Tailwind CSS configuration
+├── wrangler.toml              # Cloudflare Workers config
+└── package.json               # Dependencies and scripts
+```
 
-## Learn More
+## 🛠️ Configuration
 
-To learn more about Next.js, take a look at the following resources:
+### Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Development**: Create a `.env.local` file
+- **Production**: Configure in Cloudflare dashboard or `wrangler.toml`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### TypeScript
+
+Strict mode is enabled by default. Configuration in `tsconfig.json`:
+
+- Target: ES6
+- Module Resolution: Bundler
+- Path Alias: `@/*` → `./src/*`
+
+### Tailwind CSS
+
+Using Tailwind CSS v4 with PostCSS. Configuration in `tailwind.config.ts`.
+
+## 🚀 Deployment
+
+### Deploy to Cloudflare Workers
+
+```bash
+# Build and deploy in one command
+pnpm run deploy
+
+# Or step by step:
+pnpm run build
+pnpm run deploy
+```
+
+### Preview Deployment
+
+Before deploying to production, preview your build:
+
+```bash
+pnpm run preview
+```
+
+## 🌐 Deployment
+
+Deploy your insulin tracker to Cloudflare Workers for global edge performance.
+
+## 💡 Development Tips
+
+### Application Pages
+
+The app includes three main pages:
+
+1. **Dashboard** (`/`) - Track daily injections
+2. **History** (`/history`) - View past injection records
+3. **Statistics** (`/stats`) - Analyze compliance and contributions
+
+### API Endpoints
+
+The app provides several API endpoints:
+
+```typescript
+// Get injections (with optional date filter)
+GET /api/injections?date=2024-01-15
+
+// Log a new injection
+POST /api/injections
+{
+  "user_name": "John",
+  "injection_time": "2024-01-15T08:00:00Z",
+  "injection_type": "morning",
+  "notes": "Before breakfast"
+}
+
+// Get today's status
+GET /api/injections/today
+
+// Get statistics
+GET /api/injections/stats
+```
+
+### Database Setup
+
+To use this app, you'll need to set up a database (recommended: Cloudflare D1):
+
+```sql
+CREATE TABLE injections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_name TEXT NOT NULL,
+  injection_time TEXT NOT NULL,
+  injection_type TEXT NOT NULL CHECK (injection_type IN ('morning', 'evening')),
+  notes TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Using Cloudflare Bindings
+
+Access Cloudflare services (KV, R2, D1) through bindings:
+
+```tsx
+// In your API route
+export async function GET(request: Request, { env }) {
+  const db = env.DB; // Cloudflare D1 binding
+  const results = await db.prepare("SELECT * FROM injections").all();
+  return Response.json(results);
+}
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Build failures**: Run `pnpm run check` to identify TypeScript errors
+2. **Deployment issues**: Check `wrangler.toml` configuration
+3. **Runtime errors**: View logs in Cloudflare dashboard
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+DEBUG=* pnpm run dev
+```
+
+## 📚 Learn More
+
+### Next.js Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [Next.js GitHub Repository](https://github.com/vercel/next.js/)
+
+### Cloudflare Resources
+
+- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [OpenNext Documentation](https://opennext.js.org/)
+- [OpenNext Cloudflare Adapter](https://opennext.js.org/cloudflare)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
