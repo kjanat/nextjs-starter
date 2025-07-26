@@ -1,0 +1,4 @@
+{
+	"*.{js,jsx,ts,tsx,mjs,cjs}": ["pnpm exec biome check --write --unsafe || true"],
+	"*.{json,md,mdx,css,html,yml,yaml,scss}": ["pnpm exec biome check --write --unsafe || true"]
+}

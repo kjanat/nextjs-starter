@@ -7,10 +7,7 @@
 	"name": "next-starter-template",
 	"main": ".open-next/worker.js",
 	"compatibility_date": "2025-04-01",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".open-next/assets"
@@ -18,7 +15,7 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -52,5 +49,17 @@
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
-	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }],
+
+	/**
+	 * D1 Database Bindings
+	 * https://developers.cloudflare.com/d1/
+	 */
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "insulin-tracker",
+			"database_id": "1e3b4d4a-0796-49a3-adc8-8063d6e0ffe0"
+		}
+	]
 }
