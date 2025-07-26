@@ -1,91 +1,65 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { NextRequest } from "next/server";
+import {
+	createPaginationMetadata,
+	createSuccessResponse,
+	getPaginationParams,
+	parseRequestBody,
+	withErrorHandler,
+} from "@/lib/api-helpers";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { apiRateLimiter, injectionRateLimiter } from "@/lib/rate-limit";
-import { sanitizeNotes, sanitizeUserName, validateInjectionData } from "@/lib/validation";
+import { sanitizeQueryParam } from "@/lib/validation";
+import { InjectionService } from "@/services/injection-service";
+import type { CreateInjectionResponse, InjectionsResponse } from "@/types/api";
+import { API_ERROR_CODES, ApiError } from "@/types/api";
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
 	// Check rate limit
 	if (!(await apiRateLimiter.isAllowed(request))) {
-		return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+		throw new ApiError(ERROR_MESSAGES.RATE_LIMIT, 429, API_ERROR_CODES.RATE_LIMIT_EXCEEDED);
 	}
-
-	const { env } = await getCloudflareContext();
 
 	const url = new URL(request.url);
-	const date = url.searchParams.get("date");
+	const { page, perPage } = getPaginationParams(url);
 
-	try {
-		let query = "SELECT * FROM injections";
-		const params: string[] = [];
+	// Extract and sanitize filters
+	const filters = {
+		date: sanitizeQueryParam(url.searchParams.get("date") || undefined, 10), // YYYY-MM-DD
+		userName: sanitizeQueryParam(url.searchParams.get("userName") || undefined, 50),
+		type: sanitizeQueryParam(url.searchParams.get("type") || undefined, 10),
+	};
 
-		if (date) {
-			// Validate date format
-			const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-			if (!dateRegex.test(date)) {
-				return Response.json({ error: "Invalid date format" }, { status: 400 });
-			}
+	// Fetch injections with pagination
+	const { injections, total } = await InjectionService.getInjections(filters, page, perPage);
 
-			query += " WHERE DATE(injection_time) = DATE(?)";
-			params.push(date);
-		}
-
-		query += " ORDER BY injection_time DESC LIMIT 100"; // Add limit for performance
-
-		const result = await env.DB.prepare(query)
-			.bind(...params)
-			.all();
-
-		return Response.json({ injections: result.results });
-	} catch (error) {
-		console.error("Database error:", error);
-		return Response.json({ error: "Failed to fetch injections" }, { status: 500 });
-	}
-}
-
-export async function POST(request: NextRequest) {
-	// Check rate limit for injection creation
-	if (!(await injectionRateLimiter.isAllowed(request))) {
-		return Response.json(
-			{ error: "Too many injection logs. Please try again later." },
-			{ status: 429 },
-		);
-	}
-
-	const { env } = await getCloudflareContext();
-
-	try {
-		const data = await request.json();
-
-		// Validate injection data
-		if (!validateInjectionData(data)) {
-			return Response.json({ error: "Invalid injection data" }, { status: 400 });
-		}
-
-		// Sanitize input
-		const sanitizedData = {
-			user_name: sanitizeUserName(data.user_name),
-			injection_time: data.injection_time,
-			injection_type: data.injection_type,
-			notes: sanitizeNotes(data.notes),
+	// Create response with pagination metadata
+	const response: InjectionsResponse & { pagination: ReturnType<typeof createPaginationMetadata> } =
+		{
+			injections,
+			total,
+			pagination: createPaginationMetadata({ page, perPage, total }),
 		};
 
-		const result = await env.DB.prepare(
-			"INSERT INTO injections (user_name, injection_time, injection_type, notes) VALUES (?, ?, ?, ?)",
-		)
-			.bind(
-				sanitizedData.user_name,
-				sanitizedData.injection_time,
-				sanitizedData.injection_type,
-				sanitizedData.notes,
-			)
-			.run();
+	return createSuccessResponse(response);
+});
 
-		return Response.json({
-			success: true,
-			id: result.meta.last_row_id,
-		});
-	} catch (error) {
-		console.error("Database error:", error);
-		return Response.json({ error: "Failed to log injection" }, { status: 500 });
+export const POST = withErrorHandler(async (request: NextRequest) => {
+	// Check rate limit for injection creation
+	if (!(await injectionRateLimiter.isAllowed(request))) {
+		throw new ApiError(ERROR_MESSAGES.RATE_LIMIT, 429, API_ERROR_CODES.RATE_LIMIT_EXCEEDED);
 	}
-}
+
+	// Parse request body
+	const data = await parseRequestBody(request);
+
+	// Create injection
+	const injection = await InjectionService.createInjection(data);
+
+	// Create response
+	const response: CreateInjectionResponse = {
+		id: injection.id,
+		injection,
+	};
+
+	return createSuccessResponse(response, 201);
+});

@@ -1,48 +1,19 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { NextRequest } from "next/server";
+import { createSuccessResponse, withErrorHandler } from "@/lib/api-helpers";
+import { ERROR_MESSAGES } from "@/lib/constants";
 import { apiRateLimiter } from "@/lib/rate-limit";
+import { InjectionService } from "@/services/injection-service";
+import type { TodayStatusResponse } from "@/types/api";
+import { API_ERROR_CODES, ApiError } from "@/types/api";
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async (request: NextRequest) => {
 	// Check rate limit
 	if (!(await apiRateLimiter.isAllowed(request))) {
-		return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+		throw new ApiError(ERROR_MESSAGES.RATE_LIMIT, 429, API_ERROR_CODES.RATE_LIMIT_EXCEEDED);
 	}
 
-	const { env } = await getCloudflareContext();
+	// Get today's status
+	const todayStatus = await InjectionService.getTodayStatus();
 
-	try {
-		const today = new Date().toISOString().split("T")[0];
-
-		const result = await env.DB.prepare(
-			`SELECT injection_type, injection_time, user_name 
-       FROM injections 
-       WHERE DATE(injection_time) = DATE(?)
-       ORDER BY injection_time DESC`,
-		)
-			.bind(today)
-			.all();
-
-		const injections = result.results as Array<{
-			injection_type: string;
-			injection_time: string;
-			user_name: string;
-		}>;
-		const morningDone = injections.some((i) => i.injection_type === "morning");
-		const eveningDone = injections.some((i) => i.injection_type === "evening");
-
-		const morningInjection = injections.find((i) => i.injection_type === "morning");
-		const eveningInjection = injections.find((i) => i.injection_type === "evening");
-
-		return Response.json({
-			date: today,
-			morningDone,
-			eveningDone,
-			morningDetails: morningInjection || null,
-			eveningDetails: eveningInjection || null,
-			allComplete: morningDone && eveningDone,
-		});
-	} catch (error) {
-		console.error("Database error:", error);
-		return Response.json({ error: "Failed to fetch today status" }, { status: 500 });
-	}
-}
+	return createSuccessResponse<TodayStatusResponse>(todayStatus);
+});

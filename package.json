@@ -38,12 +38,14 @@
 	"scripts": {
 		"build": "next build",
 		"cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
-		"check": "npm run build && tsc",
+		"check": "pnpm run build && tsc",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"dev": "next dev",
 		"lint": "biome check",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
 		"start": "next start",
-		"prepare": "husky"
+		"prepare": "husky",
+		"format": "biome format --write",
+		"type-check": "tsc --noEmit"
 	}
 }

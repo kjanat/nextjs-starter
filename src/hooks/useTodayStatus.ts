@@ -1,37 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useApiCall } from "@/hooks/useApiCall";
 import { APP_CONFIG } from "@/lib/constants";
 import type { TodayStatusResponse } from "@/types/api";
 
 export function useTodayStatus() {
-	const [todayStatus, setTodayStatus] = useState<TodayStatusResponse | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-
-	const fetchTodayStatus = useCallback(async () => {
-		try {
-			setError(null);
-			const response = await fetch("/api/injections/today");
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch: ${response.statusText}`);
-			}
-
-			const data = (await response.json()) as TodayStatusResponse;
-			setTodayStatus(data);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : "Failed to fetch today status";
-			console.error("Failed to fetch today status:", err);
-			setError(errorMessage);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const { data, loading, error, execute } = useApiCall<TodayStatusResponse>(
+		"/api/injections/today",
+		{
+			autoFetch: true,
+			retryCount: 2,
+			retryDelay: 1000,
+		},
+	);
 
 	useEffect(() => {
-		fetchTodayStatus();
-		const interval = setInterval(fetchTodayStatus, APP_CONFIG.REFRESH_INTERVAL);
-		return () => clearInterval(interval);
-	}, [fetchTodayStatus]);
+		const interval = setInterval(() => {
+			execute();
+		}, APP_CONFIG.REFRESH_INTERVAL);
 
-	return { todayStatus, loading, error, refetch: fetchTodayStatus };
+		return () => clearInterval(interval);
+	}, [execute]);
+
+	return {
+		todayStatus: data,
+		loading,
+		error: error ? error.message : null,
+		refetch: execute,
+	};
 }

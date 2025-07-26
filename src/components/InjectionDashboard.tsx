@@ -125,7 +125,9 @@ UserNameInput.displayName = "UserNameInput";
 export function InjectionDashboard() {
 	const { todayStatus, refetch } = useTodayStatus();
 	const form = useInjectionForm({
-		onSuccess: refetch,
+		onSuccess: async () => {
+			await refetch();
+		},
 	});
 
 	return (

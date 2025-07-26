@@ -173,8 +173,7 @@ export function useApiCall<TResponse, TRequest = unknown>(
 				abortControllerRef.current.abort();
 			}
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [autoFetch, execute, method]);
 
 	return {
 		data: state.data,
