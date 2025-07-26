@@ -15,7 +15,7 @@ export default function StatsPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	const sortedUserStats = useMemo(() => {
-		if (!stats) return [];
+		if (!stats || !stats.userStats) return [];
 		return Object.entries(stats.userStats).sort(([, a], [, b]) => b - a);
 	}, [stats]);
 
@@ -30,7 +30,8 @@ export default function StatsPage() {
 				throw new Error(`Failed to fetch: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as StatsResponse;
+			const result = await response.json();
+			const data = result.data as StatsResponse;
 			setStats(data);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch statistics";

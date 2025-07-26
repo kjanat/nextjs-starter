@@ -71,6 +71,8 @@ export function useApiCall<TResponse, TRequest = unknown>(
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const isMountedRef = useRef(true);
 
+	const retryAttemptsRef = useRef(0);
+
 	const execute = useCallback(
 		async (overrideBody?: TRequest): Promise<TResponse | null> => {
 			if (abortControllerRef.current) {
@@ -123,6 +125,7 @@ export function useApiCall<TResponse, TRequest = unknown>(
 
 				if (isMountedRef.current) {
 					dispatch({ type: "FETCH_SUCCESS", payload: apiResponse.data });
+					retryAttemptsRef.current = 0;
 				}
 
 				clearTimeout(timeoutId);
@@ -138,9 +141,10 @@ export function useApiCall<TResponse, TRequest = unknown>(
 						: new ApiError(error instanceof Error ? error.message : "Unknown error occurred");
 
 				if (isMountedRef.current) {
-					if (state.retryAttempts < retryCount) {
+					if (retryAttemptsRef.current < retryCount) {
 						dispatch({ type: "RETRY" });
-						setTimeout(() => execute(overrideBody), retryDelay * (state.retryAttempts + 1));
+						retryAttemptsRef.current += 1;
+						setTimeout(() => execute(overrideBody), retryDelay * retryAttemptsRef.current);
 					} else {
 						dispatch({ type: "FETCH_ERROR", payload: apiError });
 					}
@@ -150,21 +154,26 @@ export function useApiCall<TResponse, TRequest = unknown>(
 				return null;
 			}
 		},
-		[url, method, body, headers, timeout, retryCount, retryDelay, state.retryAttempts],
+		[url, method, body, headers, timeout, retryCount, retryDelay],
 	);
 
 	const reset = useCallback(() => {
 		if (abortControllerRef.current) {
 			abortControllerRef.current.abort();
 		}
+		retryAttemptsRef.current = 0;
 		dispatch({ type: "RESET" });
 	}, []);
+
+	// Store execute in a ref to prevent infinite loops
+	const executeRef = useRef(execute);
+	executeRef.current = execute;
 
 	useEffect(() => {
 		isMountedRef.current = true;
 
 		if (autoFetch && method === "GET") {
-			execute();
+			executeRef.current();
 		}
 
 		return () => {
@@ -173,7 +182,9 @@ export function useApiCall<TResponse, TRequest = unknown>(
 				abortControllerRef.current.abort();
 			}
 		};
-	}, [autoFetch, execute, method]);
+		// Only re-run if autoFetch or method changes
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [autoFetch, method]);
 
 	return {
 		data: state.data,
@@ -182,5 +193,6 @@ export function useApiCall<TResponse, TRequest = unknown>(
 		execute,
 		reset,
 		retryAttempts: state.retryAttempts,
+		executeRef,
 	};
 }

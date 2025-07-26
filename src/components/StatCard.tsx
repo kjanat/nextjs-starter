@@ -56,9 +56,8 @@ export const StatCard = memo<StatCardProps>(
 		const formattedValue = typeof value === "number" ? value.toLocaleString() : value;
 
 		return (
-			<div
+			<article
 				className={cn("p-4 rounded-xl transition-colors", styles.bg, className)}
-				role="group"
 				aria-label={ariaLabel ?? `${label}: ${formattedValue}${suffix}`}
 			>
 				<div className={cn("text-3xl font-bold", styles.text, valueClassName)} aria-hidden="true">
@@ -71,7 +70,7 @@ export const StatCard = memo<StatCardProps>(
 				>
 					{label}
 				</div>
-			</div>
+			</article>
 		);
 	},
 );

@@ -4,7 +4,7 @@ import { APP_CONFIG } from "@/lib/constants";
 import type { TodayStatusResponse } from "@/types/api";
 
 export function useTodayStatus() {
-	const { data, loading, error, execute } = useApiCall<TodayStatusResponse>(
+	const { data, loading, error, execute, executeRef } = useApiCall<TodayStatusResponse>(
 		"/api/injections/today",
 		{
 			autoFetch: true,
@@ -15,11 +15,11 @@ export function useTodayStatus() {
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			execute();
+			executeRef.current();
 		}, APP_CONFIG.REFRESH_INTERVAL);
 
 		return () => clearInterval(interval);
-	}, [execute]);
+	}, [executeRef]);
 
 	return {
 		todayStatus: data,

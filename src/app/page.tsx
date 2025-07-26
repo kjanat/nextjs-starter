@@ -77,6 +77,9 @@ export default function Home() {
 					<p className="text-sm mb-2">Please enter your name first:</p>
 					<input
 						type="text"
+						id="name-prompt"
+						name="userName"
+						autoComplete="name"
 						value={userName}
 						onChange={(e) => setUserName(e.target.value)}
 						placeholder="Your name"
@@ -115,6 +118,9 @@ export default function Home() {
 				<div className="mb-6">
 					<input
 						type="text"
+						id="quick-name"
+						name="userName"
+						autoComplete="name"
 						value={userName}
 						onChange={(e) => setUserName(e.target.value)}
 						placeholder="Enter your name"

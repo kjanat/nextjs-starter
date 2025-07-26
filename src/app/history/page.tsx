@@ -26,7 +26,8 @@ export default function HistoryPage() {
 				throw new Error(`Failed to fetch: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as InjectionsResponse;
+			const result = await response.json();
+			const data = result.data as InjectionsResponse;
 			setInjections([...(data.injections || [])]);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch injections";

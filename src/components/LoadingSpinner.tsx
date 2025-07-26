@@ -30,14 +30,13 @@ export const LoadingSpinner = memo<LoadingSpinnerProps>(
 		const sizeConfig = sizeClasses[size];
 
 		return (
-			<div
+			<output
 				className={cn(
 					fullScreen
 						? "min-h-screen flex items-center justify-center"
 						: "flex items-center justify-center py-8",
 					className,
 				)}
-				role="status"
 				aria-live="polite"
 				aria-busy="true"
 			>
@@ -63,7 +62,7 @@ export const LoadingSpinner = memo<LoadingSpinnerProps>(
 						</p>
 					)}
 				</div>
-			</div>
+			</output>
 		);
 	},
 );
