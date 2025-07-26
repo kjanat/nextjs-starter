@@ -1,8 +1,9 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { NextRequest } from "next/server";
-import { COMPLIANCE_DAYS, DOSES_PER_DAY, INJECTION_TYPES } from "@/lib/constants";
+import { APP_CONFIG } from "@/lib/constants";
 import { apiRateLimiter } from "@/lib/rate-limit";
 import { getLastNDays } from "@/lib/utils";
+import { INJECTION_TYPE } from "@/types/injection";
 
 interface InjectionCount {
 	injection_type: string;
@@ -59,13 +60,13 @@ export async function GET(request: NextRequest) {
 				 WHERE DATE(injection_time) >= DATE('now', '-' || ? || ' days')
 				 GROUP BY DATE(injection_time)`,
 			)
-				.bind(INJECTION_TYPES.MORNING, INJECTION_TYPES.EVENING, COMPLIANCE_DAYS)
+				.bind(INJECTION_TYPE.MORNING, INJECTION_TYPE.EVENING, APP_CONFIG.COMPLIANCE_DAYS)
 				.all(),
 		]);
 
 		// Process weekly data for compliance calculation
 		const weeklyData = (weeklyDataResult.results || []) as unknown as DayInjections[];
-		const lastWeekDates = getLastNDays(COMPLIANCE_DAYS);
+		const lastWeekDates = getLastNDays(APP_CONFIG.COMPLIANCE_DAYS);
 
 		let missedDoses = 0;
 		lastWeekDates.forEach((date) => {
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
 		});
 
 		// Calculate compliance rate
-		const totalExpectedDoses = COMPLIANCE_DAYS * DOSES_PER_DAY;
+		const totalExpectedDoses = APP_CONFIG.COMPLIANCE_DAYS * APP_CONFIG.DOSES_PER_DAY;
 		const actualDoses = totalExpectedDoses - missedDoses;
 		const complianceRate = (actualDoses / totalExpectedDoses) * 100;
 
@@ -90,9 +91,9 @@ export async function GET(request: NextRequest) {
 			evening: 0,
 		};
 		((typeStatsResult.results || []) as unknown as InjectionCount[]).forEach((row) => {
-			if (row.injection_type === INJECTION_TYPES.MORNING) {
+			if (row.injection_type === INJECTION_TYPE.MORNING) {
 				typeStats.morning = row.count;
-			} else if (row.injection_type === INJECTION_TYPES.EVENING) {
+			} else if (row.injection_type === INJECTION_TYPE.EVENING) {
 				typeStats.evening = row.count;
 			}
 		});

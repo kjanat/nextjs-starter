@@ -5,6 +5,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
 import { StatCard } from "@/components/StatCard";
+import { ROUTES } from "@/lib/constants";
 import { alertStyles, containerStyles } from "@/lib/styles";
 import type { StatsResponse } from "@/types/api";
 
@@ -53,30 +54,22 @@ export default function StatsPage() {
 	}
 
 	return (
-		<PageLayout title="Statistics" icon="📊" backTo={{ href: "/", label: "← Back to Dashboard" }}>
+		<PageLayout
+			title="Statistics"
+			icon="📊"
+			backTo={{ href: ROUTES.HOME, label: "← Back to Dashboard" }}
+		>
 			{/* Stats Grid */}
 			<div className="grid grid-cols-2 gap-4 mb-8">
-				<StatCard
-					value={stats.totalInjections}
-					label="Total Injections"
-					colorClass="bg-blue-50 dark:bg-blue-900/20"
-				/>
+				<StatCard value={stats.totalInjections} label="Total Injections" variant="blue" />
 				<StatCard
 					value={stats.lastWeekCompliance}
 					label="7-Day Compliance"
-					colorClass="bg-green-50 dark:bg-green-900/20"
+					variant="green"
 					suffix="%"
 				/>
-				<StatCard
-					value={stats.morningInjections}
-					label="Morning Doses"
-					colorClass="bg-orange-50 dark:bg-orange-900/20"
-				/>
-				<StatCard
-					value={stats.eveningInjections}
-					label="Evening Doses"
-					colorClass="bg-purple-50 dark:bg-purple-900/20"
-				/>
+				<StatCard value={stats.morningInjections} label="Morning Doses" variant="yellow" />
+				<StatCard value={stats.eveningInjections} label="Evening Doses" variant="purple" />
 			</div>
 
 			{/* Missed Doses Alert */}

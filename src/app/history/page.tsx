@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
-import { INJECTION_TYPES } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { containerStyles, inputStyles } from "@/lib/styles";
 import { formatDate, formatTime, getToday } from "@/lib/utils";
 import type { InjectionsResponse } from "@/types/api";
-import type { Injection } from "@/types/injection";
+import { INJECTION_TYPE, type Injection } from "@/types/injection";
 
 export default function HistoryPage() {
 	const [injections, setInjections] = useState<Injection[]>([]);
@@ -27,7 +27,7 @@ export default function HistoryPage() {
 			}
 
 			const data = (await response.json()) as InjectionsResponse;
-			setInjections(data.injections || []);
+			setInjections([...(data.injections || [])]);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Failed to fetch injections";
 			console.error("Failed to fetch injections:", err);
@@ -50,7 +50,11 @@ export default function HistoryPage() {
 	}
 
 	return (
-		<PageLayout title="History" icon="📅" backTo={{ href: "/", label: "← Back to Dashboard" }}>
+		<PageLayout
+			title="History"
+			icon="📅"
+			backTo={{ href: ROUTES.HOME, label: "← Back to Dashboard" }}
+		>
 			{/* Date Selector */}
 			<div className="mb-6">
 				<input
@@ -69,7 +73,7 @@ export default function HistoryPage() {
 			) : (
 				<div className="space-y-3">
 					{injections.map((injection) => {
-						const isMorning = injection.injection_type === INJECTION_TYPES.MORNING;
+						const isMorning = injection.injection_type === INJECTION_TYPE.MORNING;
 						return (
 							<div key={injection.id} className={containerStyles.card}>
 								<div className="flex items-center justify-between">

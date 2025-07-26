@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { REFRESH_INTERVAL } from "@/lib/constants";
+import { APP_CONFIG } from "@/lib/constants";
 import type { TodayStatusResponse } from "@/types/api";
 
 export function useTodayStatus() {
@@ -29,7 +29,7 @@ export function useTodayStatus() {
 
 	useEffect(() => {
 		fetchTodayStatus();
-		const interval = setInterval(fetchTodayStatus, REFRESH_INTERVAL);
+		const interval = setInterval(fetchTodayStatus, APP_CONFIG.REFRESH_INTERVAL);
 		return () => clearInterval(interval);
 	}, [fetchTodayStatus]);
 

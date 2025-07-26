@@ -7,9 +7,10 @@ import { InjectionCard } from "@/components/InjectionCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
 import { useTodayStatus } from "@/hooks/useTodayStatus";
-import { INJECTION_TYPES } from "@/lib/constants";
+import { APP_CONFIG, ROUTES } from "@/lib/constants";
 import { alertStyles, buttonStyles, inputStyles } from "@/lib/styles";
 import { formatFullDate } from "@/lib/utils";
+import { INJECTION_TYPE, type NewInjection } from "@/types/injection";
 
 export default function Home() {
 	const { todayStatus, loading, error, refetch } = useTodayStatus();
@@ -18,22 +19,30 @@ export default function Home() {
 	const [isLogging, setIsLogging] = useState(false);
 
 	const logInjection = useCallback(
-		async (type: "morning" | "evening") => {
-			if (!userName.trim()) {
+		async (type: (typeof INJECTION_TYPE)[keyof typeof INJECTION_TYPE]) => {
+			const trimmedName = userName.trim();
+			if (!trimmedName) {
 				setShowNamePrompt(true);
+				return;
+			}
+
+			if (trimmedName.length > APP_CONFIG.MAX_NAME_LENGTH) {
+				alert(`Name must be less than ${APP_CONFIG.MAX_NAME_LENGTH} characters`);
 				return;
 			}
 
 			setIsLogging(true);
 			try {
+				const newInjection: NewInjection = {
+					user_name: trimmedName,
+					injection_time: new Date().toISOString(),
+					injection_type: type,
+				};
+
 				const response = await fetch("/api/injections", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						user_name: userName,
-						injection_time: new Date().toISOString(),
-						injection_type: type,
-					}),
+					body: JSON.stringify(newInjection),
 				});
 
 				if (!response.ok) {
@@ -41,6 +50,7 @@ export default function Home() {
 				}
 
 				await refetch();
+				setUserName("");
 			} catch (err) {
 				console.error("Failed to log injection:", err);
 				alert("Failed to log injection. Please try again.");
@@ -85,17 +95,17 @@ export default function Home() {
 			{/* Status Cards */}
 			<div className="space-y-4 mb-8">
 				<InjectionCard
-					type={INJECTION_TYPES.MORNING}
+					type={INJECTION_TYPE.MORNING}
 					isCompleted={todayStatus?.morningDone || false}
 					injectionDetails={todayStatus?.morningDetails || null}
-					onLogInjection={() => logInjection(INJECTION_TYPES.MORNING)}
+					onLogInjection={() => logInjection(INJECTION_TYPE.MORNING)}
 					isLogging={isLogging}
 				/>
 				<InjectionCard
-					type={INJECTION_TYPES.EVENING}
+					type={INJECTION_TYPE.EVENING}
 					isCompleted={todayStatus?.eveningDone || false}
 					injectionDetails={todayStatus?.eveningDetails || null}
-					onLogInjection={() => logInjection(INJECTION_TYPES.EVENING)}
+					onLogInjection={() => logInjection(INJECTION_TYPE.EVENING)}
 					isLogging={isLogging}
 				/>
 			</div>
@@ -115,10 +125,18 @@ export default function Home() {
 
 			{/* Navigation */}
 			<div className="flex gap-2">
-				<Link href="/history" className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}>
+				<Link
+					href={ROUTES.HISTORY}
+					className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}
+					aria-label="View injection history"
+				>
 					History
 				</Link>
-				<Link href="/stats" className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}>
+				<Link
+					href={ROUTES.STATS}
+					className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}
+					aria-label="View injection statistics"
+				>
 					Statistics
 				</Link>
 			</div>

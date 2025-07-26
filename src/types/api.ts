@@ -1,14 +1,26 @@
-import type { Injection } from "./injection";
+import type { Injection, InjectionStats, NewInjection } from "./injection";
 
-// API Response types
-export interface ApiResponse<T> {
-	data?: T;
-	error?: string;
-	success: boolean;
-}
+export type ApiSuccessResponse<T> = {
+	success: true;
+	data: T;
+	error?: never;
+};
+
+export type ApiErrorResponse = {
+	success: false;
+	data?: never;
+	error: {
+		message: string;
+		code?: string;
+		status?: number;
+	};
+};
+
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export interface InjectionsResponse {
-	injections: Injection[];
+	injections: readonly Injection[];
+	total: number;
 }
 
 export interface TodayStatusResponse {
@@ -20,28 +32,46 @@ export interface TodayStatusResponse {
 	allComplete: boolean;
 }
 
-export interface StatsResponse {
-	totalInjections: number;
-	morningInjections: number;
-	eveningInjections: number;
-	missedDoses: number;
-	userStats: Record<string, number>;
-	lastWeekCompliance: number;
-}
+export type StatsResponse = InjectionStats;
+
+export type CreateInjectionRequest = NewInjection;
 
 export interface CreateInjectionResponse {
-	success: boolean;
 	id: number;
+	injection: Injection;
 }
 
-// API Error type
+export const API_ERROR_CODES = {
+	VALIDATION_ERROR: "VALIDATION_ERROR",
+	NOT_FOUND: "NOT_FOUND",
+	RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
+	SERVER_ERROR: "SERVER_ERROR",
+	UNAUTHORIZED: "UNAUTHORIZED",
+} as const;
+
+export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
+
 export class ApiError extends Error {
+	public readonly status: number;
+	public readonly code: ApiErrorCode | string;
+
 	constructor(
 		message: string,
-		public status?: number,
-		public code?: string,
+		status = 500,
+		code: ApiErrorCode | string = API_ERROR_CODES.SERVER_ERROR,
 	) {
 		super(message);
 		this.name = "ApiError";
+		this.status = status;
+		this.code = code;
+		Object.setPrototypeOf(this, ApiError.prototype);
+	}
+
+	toJSON() {
+		return {
+			message: this.message,
+			status: this.status,
+			code: this.code,
+		};
 	}
 }

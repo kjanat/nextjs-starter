@@ -1,20 +1,79 @@
+import { memo } from "react";
+import { cn } from "@/lib/styles";
+
+type ColorVariant = "green" | "blue" | "yellow" | "red" | "purple" | "gray";
+
 interface StatCardProps {
 	value: number | string;
 	label: string;
-	colorClass: string;
+	variant?: ColorVariant;
 	suffix?: string;
+	className?: string;
+	valueClassName?: string;
+	labelClassName?: string;
+	"aria-label"?: string;
 }
 
-export function StatCard({ value, label, colorClass, suffix = "" }: StatCardProps) {
-	return (
-		<div className={`${colorClass} p-4 rounded-xl`}>
+const variantStyles: Record<ColorVariant, { bg: string; text: string }> = {
+	green: {
+		bg: "bg-green-50 dark:bg-green-900/20",
+		text: "text-green-600 dark:text-green-400",
+	},
+	blue: {
+		bg: "bg-blue-50 dark:bg-blue-900/20",
+		text: "text-blue-600 dark:text-blue-400",
+	},
+	yellow: {
+		bg: "bg-yellow-50 dark:bg-yellow-900/20",
+		text: "text-yellow-600 dark:text-yellow-400",
+	},
+	red: {
+		bg: "bg-red-50 dark:bg-red-900/20",
+		text: "text-red-600 dark:text-red-400",
+	},
+	purple: {
+		bg: "bg-purple-50 dark:bg-purple-900/20",
+		text: "text-purple-600 dark:text-purple-400",
+	},
+	gray: {
+		bg: "bg-gray-50 dark:bg-gray-900/20",
+		text: "text-gray-600 dark:text-gray-400",
+	},
+};
+
+export const StatCard = memo<StatCardProps>(
+	({
+		value,
+		label,
+		variant = "gray",
+		suffix = "",
+		className,
+		valueClassName,
+		labelClassName,
+		"aria-label": ariaLabel,
+	}) => {
+		const styles = variantStyles[variant];
+		const formattedValue = typeof value === "number" ? value.toLocaleString() : value;
+
+		return (
 			<div
-				className={`text-3xl font-bold ${colorClass.replace("bg-", "text-").replace("-50", "-600").replace("/20", "-400")}`}
+				className={cn("p-4 rounded-xl transition-colors", styles.bg, className)}
+				role="group"
+				aria-label={ariaLabel ?? `${label}: ${formattedValue}${suffix}`}
 			>
-				{value}
-				{suffix}
+				<div className={cn("text-3xl font-bold", styles.text, valueClassName)} aria-hidden="true">
+					{formattedValue}
+					{suffix}
+				</div>
+				<div
+					className={cn("text-sm text-gray-600 dark:text-gray-400", labelClassName)}
+					aria-hidden="true"
+				>
+					{label}
+				</div>
 			</div>
-			<div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
-		</div>
-	);
-}
+		);
+	},
+);
+
+StatCard.displayName = "StatCard";

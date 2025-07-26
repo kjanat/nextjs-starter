@@ -1,10 +1,25 @@
-export interface Injection {
-	id?: number;
+export const INJECTION_TYPE = {
+	MORNING: "morning",
+	EVENING: "evening",
+} as const;
+
+export type InjectionType = (typeof INJECTION_TYPE)[keyof typeof INJECTION_TYPE];
+
+export interface BaseInjection {
 	user_name: string;
 	injection_time: string;
-	injection_type: "morning" | "evening";
+	injection_type: InjectionType;
 	notes?: string;
-	created_at?: string;
+}
+
+export interface Injection extends BaseInjection {
+	id: number;
+	created_at: string;
+}
+
+export interface NewInjection extends BaseInjection {
+	id?: never;
+	created_at?: never;
 }
 
 export interface InjectionStats {
@@ -12,6 +27,12 @@ export interface InjectionStats {
 	morningInjections: number;
 	eveningInjections: number;
 	missedDoses: number;
-	userStats: Record<string, number>;
+	userStats: Readonly<Record<string, number>>;
 	lastWeekCompliance: number;
+}
+
+export interface UserStats {
+	username: string;
+	injectionCount: number;
+	percentage: number;
 }
