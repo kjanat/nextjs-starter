@@ -1,5 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { NextRequest } from "next/server";
 import { COMPLIANCE_DAYS, DOSES_PER_DAY, INJECTION_TYPES } from "@/lib/constants";
+import { apiRateLimiter } from "@/lib/rate-limit";
 import { getLastNDays } from "@/lib/utils";
 
 interface InjectionCount {
@@ -18,7 +20,12 @@ interface DayInjections {
 	evening_count: number;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+	// Check rate limit
+	if (!(await apiRateLimiter.isAllowed(request))) {
+		return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+	}
+
 	const { env } = await getCloudflareContext();
 
 	try {
@@ -46,12 +53,14 @@ export async function GET() {
 			env.DB.prepare(
 				`SELECT 
 					DATE(injection_time) as date,
-					SUM(CASE WHEN injection_type = '${INJECTION_TYPES.MORNING}' THEN 1 ELSE 0 END) as morning_count,
-					SUM(CASE WHEN injection_type = '${INJECTION_TYPES.EVENING}' THEN 1 ELSE 0 END) as evening_count
+					SUM(CASE WHEN injection_type = ? THEN 1 ELSE 0 END) as morning_count,
+					SUM(CASE WHEN injection_type = ? THEN 1 ELSE 0 END) as evening_count
 				 FROM injections 
-				 WHERE DATE(injection_time) >= DATE('now', '-${COMPLIANCE_DAYS} days')
+				 WHERE DATE(injection_time) >= DATE('now', '-' || ? || ' days')
 				 GROUP BY DATE(injection_time)`,
-			).all(),
+			)
+				.bind(INJECTION_TYPES.MORNING, INJECTION_TYPES.EVENING, COMPLIANCE_DAYS)
+				.all(),
 		]);
 
 		// Process weekly data for compliance calculation

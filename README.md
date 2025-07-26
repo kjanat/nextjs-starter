@@ -179,6 +179,28 @@ CREATE TABLE injections (
 );
 ```
 
+### Security Configuration
+
+The application includes several security features:
+
+1. **Rate Limiting**: API endpoints are rate-limited using Cloudflare KV
+   - API endpoints: 30 requests/minute per IP
+   - Injection creation: 10 requests/minute per IP
+
+2. **Security Headers**: Comprehensive security headers via middleware
+   - X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+   - Content-Security-Policy with strict policies
+   - CORS configuration for API routes
+
+3. **Input Validation**: All user input is validated and sanitized
+   - XSS prevention with HTML entity encoding
+   - SQL injection protection with parameterized queries
+
+To enable rate limiting in production:
+1. The KV namespace is already configured in `wrangler.jsonc`
+2. Rate limits will be enforced automatically upon deployment
+3. Keys are prefixed with `insulin-tracker:` for project isolation
+
 ### Using Cloudflare Bindings
 
 Access Cloudflare services (KV, R2, D1) through bindings:

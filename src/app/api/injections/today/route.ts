@@ -1,6 +1,13 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { NextRequest } from "next/server";
+import { apiRateLimiter } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+	// Check rate limit
+	if (!(await apiRateLimiter.isAllowed(request))) {
+		return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+	}
+
 	const { env } = await getCloudflareContext();
 
 	try {

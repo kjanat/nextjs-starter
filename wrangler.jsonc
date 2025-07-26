@@ -61,5 +61,16 @@
 			"database_name": "insulin-tracker",
 			"database_id": "1e3b4d4a-0796-49a3-adc8-8063d6e0ffe0"
 		}
+	],
+
+	/**
+	 * KV Namespace Bindings
+	 * https://developers.cloudflare.com/kv/
+	 */
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT",
+			"id": "b2f870bf8bf54dbd882e46d52466f87c"
+		}
 	]
 }

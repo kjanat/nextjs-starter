@@ -1,8 +1,14 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { NextRequest } from "next/server";
+import { apiRateLimiter, injectionRateLimiter } from "@/lib/rate-limit";
 import { sanitizeNotes, sanitizeUserName, validateInjectionData } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
+	// Check rate limit
+	if (!(await apiRateLimiter.isAllowed(request))) {
+		return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+	}
+
 	const { env } = await getCloudflareContext();
 
 	const url = new URL(request.url);
@@ -37,6 +43,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+	// Check rate limit for injection creation
+	if (!(await injectionRateLimiter.isAllowed(request))) {
+		return Response.json(
+			{ error: "Too many injection logs. Please try again later." },
+			{ status: 429 },
+		);
+	}
+
 	const { env } = await getCloudflareContext();
 
 	try {

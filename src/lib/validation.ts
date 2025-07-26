@@ -42,11 +42,28 @@ export function validateInjectionData(data: unknown): data is Omit<Injection, "i
 	return true;
 }
 
+// HTML entity encoding to prevent XSS
+function escapeHtml(text: string): string {
+	const map: Record<string, string> = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#039;",
+		"/": "&#x2F;",
+	};
+	return text.replace(/[&<>"'/]/g, (char) => map[char]);
+}
+
 export function sanitizeUserName(name: string): string {
-	return name.trim().slice(0, 100);
+	// Remove dangerous characters and escape HTML
+	const cleaned = name.replace(/[^\w\s-]/gi, "").trim();
+	return escapeHtml(cleaned).slice(0, 100);
 }
 
 export function sanitizeNotes(notes: string | null | undefined): string | null {
 	if (!notes) return null;
-	return notes.trim().slice(0, 500);
+	// Allow more characters in notes but still escape HTML
+	const cleaned = notes.trim();
+	return escapeHtml(cleaned).slice(0, 500);
 }
