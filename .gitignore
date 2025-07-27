@@ -42,3 +42,15 @@ next-env.d.ts
 .wrangler
 .dev.vars*
 logs/
+
+# Prisma
+dev.db
+dev.db-journal
+
+# environment
+.env
+.env.local
+.env.production
+.dev.vars
+
+/src/generated/prisma
