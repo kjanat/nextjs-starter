@@ -6,9 +6,10 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
 import { StatCard } from "@/components/StatCard";
+import { DataCard, MissedDosesAlert } from "@/components/ui";
 import { useStats } from "@/hooks/useInjections";
 import { ROUTES } from "@/lib/constants";
-import { alertStyles, buttonStyles, containerStyles } from "@/lib/styles";
+import { buttonStyles, containerStyles } from "@/lib/styles";
 
 export default function StatsPage() {
   const { data: stats, isLoading, error, refetch } = useStats();
@@ -63,33 +64,22 @@ export default function StatsPage() {
       </div>
 
       {/* Perfect Days */}
-      <div className={`${containerStyles.card} mb-8`}>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-            {stats.perfectDays}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Perfect days out of {stats.totalDays}
-          </div>
-        </div>
-      </div>
+      <DataCard
+        title="Perfect Days"
+        value={stats.perfectDays}
+        subtitle={`Out of ${stats.totalDays} days`}
+        variant="success"
+        icon="✨"
+        className="mb-8"
+      />
 
       {/* Missed Doses Alert */}
-      {hasInjectionHistory && missedDoses > 0 && (
-        <div className={`${alertStyles.error} mb-8`}>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <div className="font-semibold text-red-700 dark:text-red-400">
-                {missedDoses} Missed Dose{missedDoses !== 1 ? "s" : ""}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                In the last {daysToCalculate} day{daysToCalculate !== 1 ? "s" : ""}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <MissedDosesAlert
+        missedDoses={missedDoses}
+        daysCalculated={daysToCalculate}
+        hasHistory={hasInjectionHistory}
+        className="mb-8"
+      />
 
       {/* User Contributions */}
       <div className={containerStyles.section}>
