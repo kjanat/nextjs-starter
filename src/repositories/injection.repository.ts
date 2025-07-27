@@ -20,6 +20,9 @@ export interface InjectionStats {
   userContributions: Record<string, number>;
   perfectDays: number;
   totalDays: number;
+  actualDaysTracked: number;
+  firstInjectionDate: Date | null;
+  lastInjectionDate: Date | null;
 }
 
 export interface TodayStatus {
@@ -252,7 +255,28 @@ export class InjectionRepository {
    */
   private calculateStats(injectionRecords: Injection[], totalDays: number): InjectionStats {
     const totalInjections = injectionRecords.length;
-    const expectedInjections = totalDays * 2; // 2 injections per day
+
+    // Get first and last injection dates
+    const firstInjectionDate =
+      injectionRecords.length > 0 ? injectionRecords[0].injectionTime : null;
+    const lastInjectionDate =
+      injectionRecords.length > 0
+        ? injectionRecords[injectionRecords.length - 1].injectionTime
+        : null;
+
+    // Calculate actual days tracked (days since first injection)
+    let actualDaysTracked = 0;
+    if (firstInjectionDate && lastInjectionDate) {
+      const daysDiff = Math.floor(
+        (lastInjectionDate.getTime() - firstInjectionDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      actualDaysTracked = daysDiff + 1; // Include both first and last day
+    }
+
+    // Use actual days tracked for compliance calculation if available
+    const daysForCompliance =
+      actualDaysTracked > 0 ? Math.min(actualDaysTracked, totalDays) : totalDays;
+    const expectedInjections = daysForCompliance * 2; // 2 injections per day
     const complianceRate = totalInjections > 0 ? (totalInjections / expectedInjections) * 100 : 0;
 
     const morningCount = injectionRecords.filter((i) => i.injectionType === "morning").length;
@@ -289,6 +313,9 @@ export class InjectionRepository {
       userContributions,
       perfectDays,
       totalDays,
+      actualDaysTracked,
+      firstInjectionDate,
+      lastInjectionDate,
     };
   }
 

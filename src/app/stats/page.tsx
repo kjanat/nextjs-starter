@@ -31,12 +31,17 @@ export default function StatsPage() {
   }
 
   // Calculate missed doses only if user has injection history
-  // Use last 7 days or since first injection, whichever is shorter
   const hasInjectionHistory = stats.totalInjections > 0;
-  const daysToCalculate = Math.min(7, stats.totalDays); // Don't count days before they started
+
+  // Use last 7 days or actual tracking period, whichever is shorter
+  const daysToCalculate =
+    hasInjectionHistory && stats.actualDaysTracked > 0 ? Math.min(7, stats.actualDaysTracked) : 0;
+
+  // Only calculate expected doses if user has started tracking
   const expectedDoses = daysToCalculate * 2; // 2 per day
-  const actualDosesInPeriod = Math.min(stats.totalInjections, expectedDoses);
-  const missedDoses = hasInjectionHistory ? Math.max(0, expectedDoses - actualDosesInPeriod) : 0;
+  const actualDosesInPeriod =
+    daysToCalculate > 0 ? Math.min(stats.totalInjections, expectedDoses) : 0;
+  const missedDoses = daysToCalculate > 0 ? Math.max(0, expectedDoses - actualDosesInPeriod) : 0;
 
   return (
     <PageLayout
