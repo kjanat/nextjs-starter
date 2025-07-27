@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { AnalyticsCalculator } from "@/lib/analytics";
+import { invalidateInjectionCaches } from "@/lib/cache-utils";
 import { DatabaseError, getErrorDetails, ValidationError } from "@/lib/errors";
 import {
   createInjectionSchema,
@@ -24,6 +25,9 @@ export const injectionRouter = router({
         injectionType: input.injectionType,
         notes: input.notes,
       });
+
+      // Invalidate server-side caches to ensure fresh data
+      await invalidateInjectionCaches();
 
       return injection;
     } catch (error) {
