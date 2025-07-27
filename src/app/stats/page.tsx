@@ -30,10 +30,13 @@ export default function StatsPage() {
     return <ErrorMessage error={error?.message || "Failed to load statistics"} onRetry={refetch} />;
   }
 
-  // Calculate missed doses (expected - actual)
-  const expectedDoses = 14; // 2 per day for 7 days
-  const actualDoses = Math.min(stats.totalInjections, expectedDoses);
-  const missedDoses = Math.max(0, expectedDoses - actualDoses);
+  // Calculate missed doses only if user has injection history
+  // Use last 7 days or since first injection, whichever is shorter
+  const hasInjectionHistory = stats.totalInjections > 0;
+  const daysToCalculate = Math.min(7, stats.totalDays); // Don't count days before they started
+  const expectedDoses = daysToCalculate * 2; // 2 per day
+  const actualDosesInPeriod = Math.min(stats.totalInjections, expectedDoses);
+  const missedDoses = hasInjectionHistory ? Math.max(0, expectedDoses - actualDosesInPeriod) : 0;
 
   return (
     <PageLayout
@@ -67,15 +70,17 @@ export default function StatsPage() {
       </div>
 
       {/* Missed Doses Alert */}
-      {missedDoses > 0 && (
+      {hasInjectionHistory && missedDoses > 0 && (
         <div className={`${alertStyles.error} mb-8`}>
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚠️</span>
             <div>
               <div className="font-semibold text-red-700 dark:text-red-400">
-                {missedDoses} Missed Doses
+                {missedDoses} Missed Dose{missedDoses !== 1 ? "s" : ""}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">In the last 7 days</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                In the last {daysToCalculate} day{daysToCalculate !== 1 ? "s" : ""}
+              </div>
             </div>
           </div>
         </div>
