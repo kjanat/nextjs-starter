@@ -43,9 +43,16 @@ next-env.d.ts
 .dev.vars*
 logs/
 
-# Prisma
+# SQLite databases
 dev.db
 dev.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Drizzle
+/drizzle/migrations/meta
+drizzle/*.sqlite
+drizzle/*.sqlite-journal
 
 # environment
 .env
@@ -53,4 +60,4 @@ dev.db-journal
 .env.production
 .dev.vars
 
-/src/generated/prisma
+/src/generated

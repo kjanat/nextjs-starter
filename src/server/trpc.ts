@@ -1,10 +1,10 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { getPrisma } from "./db";
+import { createDrizzleContext } from "./drizzle-context";
 
-export const createContext = async () => ({ db: await getPrisma() });
-type Context = Awaited<ReturnType<typeof createContext>>;
+export const createContext = createDrizzleContext;
+export type Context = Awaited<ReturnType<typeof createContext>>;
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -16,9 +16,3 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
-
-export const appRouter = router({
-  ping: publicProcedure.query(() => "pong"),
-});
-
-export type AppRouter = typeof appRouter;

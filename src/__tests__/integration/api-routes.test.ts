@@ -1,5 +1,4 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { createMocks } from "node-mocks-http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appRouter } from "@/server/routers";
 import { createContext } from "@/server/trpc";
@@ -32,6 +31,7 @@ vi.mock("@/server/db", () => ({
 describe("tRPC API Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(createContext).mockResolvedValue({ db: mockDb as any });
   });
 

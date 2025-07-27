@@ -1,5 +1,5 @@
 import { router } from "../trpc";
-import { injectionRouter } from "./injection";
+import { injectionRouter } from "./injection-drizzle";
 
 export const appRouter = router({
   injection: injectionRouter,

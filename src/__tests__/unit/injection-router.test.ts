@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { injectionRouter } from "@/server/routers/injection";
-import { createContext } from "@/server/trpc";
 
 // Mock the database
 const mockDb = {
@@ -12,6 +11,7 @@ const mockDb = {
 
 // Mock context
 const mockContext = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: mockDb as any,
 };
 
@@ -134,7 +134,6 @@ describe("Injection Router", () => {
 
   describe("todayStatus procedure", () => {
     it("should return morning and evening status for today", async () => {
-      const today = new Date();
       const mockInjections = [
         {
           id: "test-1",
