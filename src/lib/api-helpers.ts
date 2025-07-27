@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { ERROR_MESSAGES } from "@/lib/constants";
-import { validatePaginationParams } from "@/lib/validation";
+import { validatePaginationParams } from "@/lib/pagination";
 import { API_ERROR_CODES, ApiError, type ApiErrorCode, type ApiResponse } from "@/types/api";
 
 /**

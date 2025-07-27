@@ -6,12 +6,12 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { InjectionCard } from "@/components/InjectionCard";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
-import type { Injection } from "@/generated/prisma";
 import { useCreateInjection, useTodayStatus } from "@/hooks/useInjections";
 import { APP_CONFIG, ROUTES } from "@/lib/constants";
 import { alertStyles, buttonStyles, inputStyles } from "@/lib/styles";
 import { formatFullDate } from "@/lib/utils";
-import { INJECTION_TYPE, type InjectionType } from "@/types/injection";
+import type { Injection } from "@/types";
+import { INJECTION_TYPE } from "@/types/injection";
 
 export default function Home() {
   const { data: todayStatus, isLoading, error, refetch } = useTodayStatus();
@@ -93,36 +93,14 @@ export default function Home() {
         <InjectionCard
           type={INJECTION_TYPE.MORNING}
           isCompleted={todayStatus?.morning || false}
-          injectionDetails={
-            morningInjection
-              ? {
-                  id: parseInt(morningInjection.id),
-                  user_name: morningInjection.userName,
-                  injection_time: morningInjection.injectionTime.toISOString(),
-                  injection_type: morningInjection.injectionType as InjectionType,
-                  notes: morningInjection.notes || undefined,
-                  created_at: morningInjection.createdAt.toISOString(),
-                }
-              : null
-          }
+          injectionDetails={morningInjection || null}
           onLogInjection={() => logInjection(INJECTION_TYPE.MORNING)}
           isLogging={createInjection.isPending}
         />
         <InjectionCard
           type={INJECTION_TYPE.EVENING}
           isCompleted={todayStatus?.evening || false}
-          injectionDetails={
-            eveningInjection
-              ? {
-                  id: parseInt(eveningInjection.id),
-                  user_name: eveningInjection.userName,
-                  injection_time: eveningInjection.injectionTime.toISOString(),
-                  injection_type: eveningInjection.injectionType as InjectionType,
-                  notes: eveningInjection.notes || undefined,
-                  created_at: eveningInjection.createdAt.toISOString(),
-                }
-              : null
-          }
+          injectionDetails={eveningInjection || null}
           onLogInjection={() => logInjection(INJECTION_TYPE.EVENING)}
           isLogging={createInjection.isPending}
         />

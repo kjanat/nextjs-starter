@@ -9,10 +9,8 @@ export default nextConfig;
 // added by create cloudflare to enable calling `getCloudflareContext()` in `next dev`
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-// Local emulations of bindings
-initOpenNextCloudflareForDev();
-
-// Remote emulations of bindings
-/* initOpenNextCloudflareForDev({
- experimental: { remoteBindings: true }
-}); */
+// Use remote bindings for D1 database access in development
+// This enables hot reload while still having access to D1
+initOpenNextCloudflareForDev({
+  experimental: { remoteBindings: true },
+});

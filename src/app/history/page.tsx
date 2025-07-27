@@ -4,11 +4,11 @@ import { useState } from "react";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLayout } from "@/components/PageLayout";
-import type { Injection } from "@/generated/prisma";
 import { useInjections } from "@/hooks/useInjections";
 import { ROUTES } from "@/lib/constants";
 import { containerStyles, inputStyles } from "@/lib/styles";
 import { formatDate, formatTime, getToday } from "@/lib/utils";
+import type { Injection } from "@/types";
 import { INJECTION_TYPE } from "@/types/injection";
 
 export default function HistoryPage() {

@@ -43,8 +43,8 @@ export const InjectionCard = memo<InjectionCardProps>(
       if (!isCompleted || !injectionDetails) return null;
 
       return {
-        userName: injectionDetails.user_name,
-        time: formatTime(injectionDetails.injection_time),
+        userName: injectionDetails.userName,
+        time: formatTime(injectionDetails.injectionTime.toISOString()),
       };
     }, [isCompleted, injectionDetails]);
 
@@ -79,7 +79,9 @@ export const InjectionCard = memo<InjectionCardProps>(
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 By: <span className="font-medium">{completionInfo.userName}</span> at{" "}
-                <time dateTime={injectionDetails.injection_time}>{completionInfo.time}</time>
+                <time dateTime={injectionDetails.injectionTime.toISOString()}>
+                  {completionInfo.time}
+                </time>
               </div>
             </div>
           ) : (

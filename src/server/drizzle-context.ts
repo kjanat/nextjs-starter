@@ -5,26 +5,37 @@ import { InjectionRepository } from "@/repositories/injection.repository";
 // Cache the database client across requests in the same worker instance
 let cachedClient: EdgeDatabaseClient | null = null;
 
+// Error classes for better error handling
+export class DatabaseConnectionError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "DatabaseConnectionError";
+  }
+}
+
+export class DatabaseHealthCheckError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "DatabaseHealthCheckError";
+  }
+}
+
 /**
  * Create tRPC context with Drizzle ORM
  */
 export async function createDrizzleContext() {
   try {
-    const isLocalDev = process.env.NODE_ENV === "development" && !process.env.CLOUDFLARE_ENV;
-
-    if (isLocalDev) {
-      // For local development, you need to run wrangler dev
-      throw new Error(
-        "Local development requires 'wrangler dev' for D1 database emulation. " +
-          "Run: pnpm wrangler dev --local --persist",
-      );
-    }
-
     // Get Cloudflare environment bindings
     const { env } = getCloudflareContext();
 
-    if (!env.DB) {
-      throw new Error(
+    if (!env?.DB) {
+      throw new DatabaseConnectionError(
         "D1 database binding 'DB' not found. " +
           "Ensure your wrangler.toml has the correct d1_databases configuration.",
       );
@@ -38,7 +49,7 @@ export async function createDrizzleContext() {
       const isHealthy = await cachedClient.healthCheck();
       if (!isHealthy) {
         cachedClient = null;
-        throw new Error("Database health check failed");
+        throw new DatabaseHealthCheckError("Database health check failed");
       }
     }
 
@@ -56,7 +67,12 @@ export async function createDrizzleContext() {
     };
   } catch (error) {
     console.error("Failed to create Drizzle context:", error);
-    throw error;
+    // Re-throw known errors
+    if (error instanceof DatabaseConnectionError || error instanceof DatabaseHealthCheckError) {
+      throw error;
+    }
+    // Wrap unknown errors
+    throw new DatabaseConnectionError("Failed to create database context", error);
   }
 }
 
@@ -71,8 +87,8 @@ export type DrizzleContext = Awaited<ReturnType<typeof createDrizzleContext>>;
 export async function getDirectDB() {
   const { env } = getCloudflareContext();
 
-  if (!env.DB) {
-    throw new Error("D1 database binding not found");
+  if (!env?.DB) {
+    throw new DatabaseConnectionError("D1 database binding not found");
   }
 
   return createDrizzleClient(env.DB);

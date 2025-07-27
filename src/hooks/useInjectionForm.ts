@@ -48,9 +48,10 @@ export function useInjectionForm({ onSuccess, onError }: UseInjectionFormOptions
       }
 
       const injectionData: CreateInjectionRequest = {
-        user_name: form.values.userName.trim(),
-        injection_time: new Date().toISOString(),
-        injection_type: type,
+        userName: form.values.userName.trim(),
+        injectionTime: new Date(),
+        injectionType: type,
+        notes: null,
       };
 
       const result = await createInjection(injectionData);

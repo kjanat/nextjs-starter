@@ -41,14 +41,15 @@ export function isInjection(obj: unknown): obj is Injection {
   const injection = obj as Record<string, unknown>;
 
   return (
-    typeof injection.id === "number" &&
-    typeof injection.user_name === "string" &&
-    typeof injection.injection_time === "string" &&
-    isValidInjectionType(injection.injection_type) &&
+    typeof injection.id === "string" &&
+    typeof injection.userName === "string" &&
+    injection.injectionTime instanceof Date &&
+    isValidInjectionType(injection.injectionType) &&
     (injection.notes === undefined ||
       injection.notes === null ||
       typeof injection.notes === "string") &&
-    typeof injection.created_at === "string"
+    injection.createdAt instanceof Date &&
+    injection.updatedAt instanceof Date
   );
 }
 
@@ -61,11 +62,10 @@ export function isNewInjection(obj: unknown): obj is NewInjection {
   const injection = obj as Record<string, unknown>;
 
   return (
-    injection.id === undefined &&
-    injection.created_at === undefined &&
-    typeof injection.user_name === "string" &&
-    typeof injection.injection_time === "string" &&
-    isValidInjectionType(injection.injection_type) &&
+    (injection.id === undefined || typeof injection.id === "string") &&
+    typeof injection.userName === "string" &&
+    injection.injectionTime instanceof Date &&
+    isValidInjectionType(injection.injectionType) &&
     (injection.notes === undefined ||
       injection.notes === null ||
       typeof injection.notes === "string")

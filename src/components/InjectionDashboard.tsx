@@ -4,12 +4,12 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { memo, Suspense } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import type { Injection } from "@/generated/prisma";
 import { useInjectionForm } from "@/hooks/useInjectionForm";
 import { useTodayStatus } from "@/hooks/useInjections";
 import { ROUTES } from "@/lib/constants";
 import { alertStyles, buttonStyles, cn, inputStyles } from "@/lib/styles";
-import { INJECTION_TYPE, type InjectionType } from "@/types/injection";
+import type { Injection } from "@/types";
+import { INJECTION_TYPE } from "@/types/injection";
 
 const InjectionCard = dynamic(
   () => import("@/components/InjectionCard").then((mod) => ({ default: mod.InjectionCard })),
@@ -147,36 +147,14 @@ export function InjectionDashboard() {
           <InjectionCard
             type={INJECTION_TYPE.MORNING}
             isCompleted={todayStatus?.morning ?? false}
-            injectionDetails={
-              morningInjection
-                ? {
-                    id: parseInt(morningInjection.id),
-                    user_name: morningInjection.userName,
-                    injection_time: morningInjection.injectionTime.toISOString(),
-                    injection_type: morningInjection.injectionType as InjectionType,
-                    notes: morningInjection.notes || undefined,
-                    created_at: morningInjection.createdAt.toISOString(),
-                  }
-                : null
-            }
+            injectionDetails={morningInjection || null}
             onLogInjection={() => form.logInjection(INJECTION_TYPE.MORNING)}
             isLogging={form.isLogging}
           />
           <InjectionCard
             type={INJECTION_TYPE.EVENING}
             isCompleted={todayStatus?.evening ?? false}
-            injectionDetails={
-              eveningInjection
-                ? {
-                    id: parseInt(eveningInjection.id),
-                    user_name: eveningInjection.userName,
-                    injection_time: eveningInjection.injectionTime.toISOString(),
-                    injection_type: eveningInjection.injectionType as InjectionType,
-                    notes: eveningInjection.notes || undefined,
-                    created_at: eveningInjection.createdAt.toISOString(),
-                  }
-                : null
-            }
+            injectionDetails={eveningInjection || null}
             onLogInjection={() => form.logInjection(INJECTION_TYPE.EVENING)}
             isLogging={form.isLogging}
           />

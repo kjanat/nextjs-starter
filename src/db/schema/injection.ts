@@ -1,11 +1,11 @@
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// Matches the existing Prisma schema exactly
+// Injection table schema for Drizzle ORM
 export const injections = sqliteTable(
   "injections",
   {
-    // Using text for ID to match Prisma's cuid() default
+    // Using text for ID with cuid-like format
     id: text("id")
       .primaryKey()
       .$defaultFn(() => {
@@ -33,7 +33,7 @@ export const injections = sqliteTable(
       .$onUpdate(() => new Date()),
   },
   (table) => ({
-    // Indexes matching Prisma schema
+    // Performance indexes
     userNameIdx: index("idx_injections_user_name").on(table.userName),
     injectionTimeIdx: index("idx_injections_injection_time").on(table.injectionTime),
     injectionTypeIdx: index("idx_injections_injection_type").on(table.injectionType),

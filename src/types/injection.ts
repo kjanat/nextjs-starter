@@ -5,21 +5,26 @@ export const INJECTION_TYPE = {
 
 export type InjectionType = (typeof INJECTION_TYPE)[keyof typeof INJECTION_TYPE];
 
-export interface BaseInjection {
-  user_name: string;
-  injection_time: string;
-  injection_type: InjectionType;
-  notes?: string;
+// Import the actual database types
+import type { Injection as DBInjection, NewInjection as DBNewInjection } from "@/db/schema";
+
+// Re-export the DB types as our main types
+export type Injection = DBInjection;
+export type NewInjection = DBNewInjection;
+
+// Additional types for filtering
+export interface InjectionFilters {
+  userName?: string;
+  date?: string | Date;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-export interface Injection extends BaseInjection {
-  id: number;
-  created_at: string;
-}
-
-export interface NewInjection extends BaseInjection {
-  id?: never;
-  created_at?: never;
+// Type for today's status
+export interface TodayStatus {
+  morning: boolean;
+  evening: boolean;
+  injections: Injection[];
 }
 
 export interface InjectionStats {

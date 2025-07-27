@@ -1,4 +1,6 @@
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { DatabaseError, getErrorDetails, ValidationError } from "@/lib/errors";
 import {
   createInjectionSchema,
   getInjectionsSchema,
@@ -24,14 +26,23 @@ export const injectionRouter = router({
 
       return injection;
     } catch (error) {
-      console.error("Failed to create injection:", {
-        error: error instanceof Error ? error.message : String(error),
-        input: {
-          userName: input.userName,
-          injectionType: input.injectionType,
-          injectionTime: input.injectionTime,
-        },
-      });
+      console.error("Failed to create injection:", getErrorDetails(error));
+
+      if (error instanceof ValidationError) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error.message,
+          cause: error.errors,
+        });
+      }
+
+      if (error instanceof DatabaseError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+          cause: error,
+        });
+      }
 
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -54,13 +65,23 @@ export const injectionRouter = router({
 
       return injections;
     } catch (error) {
-      console.error("Failed to fetch injections:", {
-        error: error instanceof Error ? error.message : String(error),
-        input: {
-          date: input.date,
-          userName: input.userName,
-        },
-      });
+      console.error("Failed to fetch injections:", getErrorDetails(error));
+
+      if (error instanceof ValidationError) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error.message,
+          cause: error.errors,
+        });
+      }
+
+      if (error instanceof DatabaseError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+          cause: error,
+        });
+      }
 
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -79,10 +100,15 @@ export const injectionRouter = router({
 
       return status;
     } catch (error) {
-      console.error("todayStatus error:", {
-        error: error instanceof Error ? error.message : String(error),
-        userName: input.userName,
-      });
+      console.error("todayStatus error:", getErrorDetails(error));
+
+      if (error instanceof DatabaseError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error.message,
+          cause: error,
+        });
+      }
 
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -93,24 +119,47 @@ export const injectionRouter = router({
   }),
 
   /**
-   * Get injection statistics for the last 30 days
+   * Get injection statistics for a specified period
    */
-  stats: publicProcedure.query(async ({ ctx }) => {
-    try {
-      const stats = await ctx.repositories.injection.getStats(30);
-      return stats;
-    } catch (error) {
-      console.error("Failed to calculate statistics:", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+  stats: publicProcedure
+    .input(
+      z
+        .object({
+          daysBack: z.number().min(1).max(365).default(30),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const daysBack = input?.daysBack ?? 30;
+        const stats = await ctx.repositories.injection.getStats(daysBack);
+        return stats;
+      } catch (error) {
+        console.error("Failed to calculate statistics:", getErrorDetails(error));
 
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to calculate statistics",
-        cause: error,
-      });
-    }
-  }),
+        if (error instanceof ValidationError) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error.message,
+            cause: error.errors,
+          });
+        }
+
+        if (error instanceof DatabaseError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message,
+            cause: error,
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to calculate statistics",
+          cause: error,
+        });
+      }
+    }),
 
   /**
    * Health check endpoint
