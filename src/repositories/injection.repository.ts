@@ -136,7 +136,7 @@ export class InjectionRepository {
 
       if (filters?.date) {
         const date = new Date(filters.date);
-        if (isNaN(date.getTime())) {
+        if (Number.isNaN(date.getTime())) {
           throw new ValidationError("Invalid date format", {
             date: ["Must be a valid date"],
           });

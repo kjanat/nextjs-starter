@@ -21,7 +21,8 @@
       "!pnpm-lock.yaml",
       "!.open-next/**",
       "!cloudflare-env.d.ts",
-      "!worker-configuration.d.ts"
+      "!worker-configuration.d.ts",
+      "!drizzle/**"
     ]
   },
   "formatter": {
@@ -41,8 +42,8 @@
         "useImportType": "error"
       },
       "a11y": {
-        "noLabelWithoutControl": "off",
-        "useButtonType": "off"
+        "noLabelWithoutControl": "warn",
+        "useButtonType": "warn"
       },
       "complexity": {
         "noStaticOnlyClass": "off"

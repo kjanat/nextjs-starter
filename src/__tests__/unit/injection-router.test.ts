@@ -11,8 +11,7 @@ const mockDb = {
 
 // Mock context
 const mockContext = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: mockDb as any,
+  db: mockDb as unknown,
 };
 
 describe("Injection Router", () => {

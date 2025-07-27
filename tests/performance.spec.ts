@@ -56,7 +56,7 @@ test.describe("Performance Tests", () => {
 
   test("should have efficient bundle size", async ({ page }) => {
     // Monitor network requests
-    const responses: any[] = [];
+    const responses: Response[] = [];
 
     page.on("response", (response) => {
       responses.push({
@@ -89,7 +89,7 @@ test.describe("Performance Tests", () => {
       deviceScaleFactor: 2,
       isMobile: true,
       hasTouch: true,
-      defaultBrowserType: browserName as any,
+      defaultBrowserType: browserName,
     });
 
     // Throttle CPU
@@ -129,7 +129,7 @@ test.describe("Performance Tests", () => {
     await page.waitForTimeout(2000);
 
     // Check that API responses are within reasonable time
-    for (const [url, timing] of Object.entries(apiTimings)) {
+    for (const [_url, timing] of Object.entries(apiTimings)) {
       expect(timing).toBeLessThan(2000); // 2 seconds max for any API call
     }
   });
@@ -160,7 +160,10 @@ test.describe("Performance Tests", () => {
 
     // Get initial memory usage
     const initialMemory = await page.evaluate(() => {
-      return (performance as any).memory?.usedJSHeapSize || 0;
+      return (
+        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0
+      );
     });
 
     // Perform memory-intensive operations
@@ -178,7 +181,10 @@ test.describe("Performance Tests", () => {
 
     // Get final memory usage
     const finalMemory = await page.evaluate(() => {
-      return (performance as any).memory?.usedJSHeapSize || 0;
+      return (
+        (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+          ?.usedJSHeapSize || 0
+      );
     });
 
     // Memory usage shouldn't increase dramatically

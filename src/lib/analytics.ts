@@ -78,7 +78,8 @@ export class AnalyticsCalculator {
         timeMap.set(key, { count: 0, totalGlucose: 0, glucoseCount: 0 });
       }
 
-      const data = timeMap.get(key)!;
+      const data = timeMap.get(key);
+      if (!data) return;
       data.count++;
 
       if (injection.bloodGlucoseBefore) {
@@ -124,7 +125,8 @@ export class AnalyticsCalculator {
       .forEach((injection) => {
         const dayOfWeek = injection.injectionTime.getDay();
         const dateKey = format(injection.injectionTime, "yyyy-MM-dd");
-        const data = dayMap.get(dayOfWeek)!;
+        const data = dayMap.get(dayOfWeek);
+        if (!data) return;
 
         data.total++;
         data.days.add(dateKey);
@@ -178,7 +180,7 @@ export class AnalyticsCalculator {
         if (!injectionsByDate.has(dateKey)) {
           injectionsByDate.set(dateKey, []);
         }
-        injectionsByDate.get(dateKey)!.push(injection);
+        injectionsByDate.get(dateKey)?.push(injection);
       });
 
     // Daily trends
@@ -405,8 +407,12 @@ export class AnalyticsCalculator {
 
     // Calculate time in range (70-180 mg/dL)
     const allReadings = [
-      ...injections.filter((i) => i.bloodGlucoseBefore).map((i) => i.bloodGlucoseBefore!),
-      ...injections.filter((i) => i.bloodGlucoseAfter).map((i) => i.bloodGlucoseAfter!),
+      ...injections
+        .filter((i) => i.bloodGlucoseBefore !== null)
+        .map((i) => i.bloodGlucoseBefore as number),
+      ...injections
+        .filter((i) => i.bloodGlucoseAfter !== null)
+        .map((i) => i.bloodGlucoseAfter as number),
     ];
 
     const inRangeCount = allReadings.filter((reading) => reading >= 70 && reading <= 180).length;

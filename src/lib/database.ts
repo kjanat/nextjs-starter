@@ -62,8 +62,9 @@ export class DatabaseService {
    * Get or create a prepared statement
    */
   private async getPreparedStatement(sql: string): Promise<PreparedStatement> {
-    if (this.preparedStatements.has(sql)) {
-      return this.preparedStatements.get(sql)!;
+    const existing = this.preparedStatements.get(sql);
+    if (existing) {
+      return existing;
     }
 
     const { env } = await getCloudflareContext();

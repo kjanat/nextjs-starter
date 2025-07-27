@@ -31,8 +31,7 @@ vi.mock("@/server/db", () => ({
 describe("tRPC API Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(createContext).mockResolvedValue({ db: mockDb as any });
+    vi.mocked(createContext).mockResolvedValue({ db: mockDb as unknown as typeof createContext });
   });
 
   afterEach(() => {
