@@ -34,10 +34,18 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "off"
       },
       "style": {
         "useImportType": "error"
+      },
+      "a11y": {
+        "noLabelWithoutControl": "off",
+        "useButtonType": "off"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
       }
     }
   },

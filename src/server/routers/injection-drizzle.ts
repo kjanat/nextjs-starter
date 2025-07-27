@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { AnalyticsCalculator } from "@/lib/analytics";
 import { DatabaseError, getErrorDetails, ValidationError } from "@/lib/errors";
 import {
   createInjectionSchema,
@@ -156,6 +157,57 @@ export const injectionRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to calculate statistics",
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get advanced analytics
+   */
+  getAdvancedAnalytics: publicProcedure
+    .input(
+      z.object({
+        userName: z.string().optional(),
+        daysToAnalyze: z.number().min(1).max(365).default(30),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        // For now, use the regular injections table
+        // In production, you'd migrate to the enhanced schema
+        const injections = await ctx.repositories.injection.findAll({
+          userName: input.userName,
+        });
+
+        // Convert to enhanced format for analytics
+        const enhancedInjections = injections.map((inj) => ({
+          ...inj,
+          insulinType: null,
+          insulinBrand: null,
+          dosageUnits: null,
+          bloodGlucoseBefore: null,
+          bloodGlucoseAfter: null,
+          bloodGlucoseUnit: "mg/dL" as const,
+          mealType: null,
+          carbsGrams: null,
+          injectionSite: null,
+          tags: null,
+          inventoryId: null,
+        }));
+
+        const analytics = await AnalyticsCalculator.performAnalytics(
+          enhancedInjections,
+          input.daysToAnalyze,
+        );
+
+        return analytics;
+      } catch (error) {
+        console.error("Failed to calculate analytics:", getErrorDetails(error));
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to calculate analytics",
           cause: error,
         });
       }

@@ -123,20 +123,27 @@ export default function Home() {
       )}
 
       {/* Navigation */}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <Link
           href={ROUTES.HISTORY}
-          className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}
+          className={`py-3 text-center ${buttonStyles.secondary}`}
           aria-label="View injection history"
         >
           History
         </Link>
         <Link
           href={ROUTES.STATS}
-          className={`flex-1 py-3 text-center ${buttonStyles.secondary}`}
+          className={`py-3 text-center ${buttonStyles.secondary}`}
           aria-label="View injection statistics"
         >
           Statistics
+        </Link>
+        <Link
+          href="/inventory"
+          className={`py-3 text-center ${buttonStyles.secondary}`}
+          aria-label="Manage insulin inventory"
+        >
+          Inventory
         </Link>
       </div>
     </PageLayout>

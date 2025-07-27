@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -7,7 +8,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { StatCard } from "@/components/StatCard";
 import { useStats } from "@/hooks/useInjections";
 import { ROUTES } from "@/lib/constants";
-import { alertStyles, containerStyles } from "@/lib/styles";
+import { alertStyles, buttonStyles, containerStyles } from "@/lib/styles";
 
 export default function StatsPage() {
   const { data: stats, isLoading, error, refetch } = useStats();
@@ -113,6 +114,13 @@ export default function StatsPage() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Link to Advanced Analytics */}
+      <div className="mt-8">
+        <Link href="/analytics" className={`block w-full py-3 text-center ${buttonStyles.primary}`}>
+          View Advanced Analytics →
+        </Link>
       </div>
     </PageLayout>
   );
